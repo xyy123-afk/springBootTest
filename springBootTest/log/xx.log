@@ -1,0 +1,96 @@
+2026-09-21T13:48:14.102+08:00  INFO 8292 --- [springBootTest] [main] c.f.s.SpringBootTestApplication          : Starting SpringBootTestApplication v0.0.1-SNAPSHOT using Java 21.0.10 with PID 8292 (D:\workSpace\springBootTest\target\springBootTest-0.0.1-SNAPSHOT.jar started by Administrator in D:\workSpace\springBootTest)
+2026-09-21T13:48:14.130+08:00  INFO 8292 --- [springBootTest] [main] c.f.s.SpringBootTestApplication          : The following 1 profile is active: "dev"
+2026-09-21T13:48:14.703+08:00  INFO 8292 --- [springBootTest] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-21T13:48:14.755+08:00  INFO 8292 --- [springBootTest] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 41 ms. Found 1 JPA repository interface.
+2026-09-21T13:48:15.220+08:00  INFO 8292 --- [springBootTest] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8081 (http)
+2026-09-21T13:48:15.234+08:00  INFO 8292 --- [springBootTest] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-09-21T13:48:15.234+08:00  INFO 8292 --- [springBootTest] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.40]
+2026-09-21T13:48:15.268+08:00  INFO 8292 --- [springBootTest] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-09-21T13:48:15.269+08:00  INFO 8292 --- [springBootTest] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1103 ms
+2026-09-21T13:48:15.422+08:00  INFO 8292 --- [springBootTest] [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-09-21T13:48:15.472+08:00  INFO 8292 --- [springBootTest] [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.13.Final
+2026-09-21T13:48:15.505+08:00  INFO 8292 --- [springBootTest] [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-09-21T13:48:15.762+08:00  INFO 8292 --- [springBootTest] [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-21T13:48:15.792+08:00  INFO 8292 --- [springBootTest] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-09-21T13:48:15.973+08:00  INFO 8292 --- [springBootTest] [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@38732372
+2026-09-21T13:48:15.975+08:00  INFO 8292 --- [springBootTest] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-09-21T13:48:16.053+08:00  INFO 8292 --- [springBootTest] [main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 8.0.39
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-21T13:48:16.658+08:00  INFO 8292 --- [springBootTest] [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-21T13:48:16.701+08:00  INFO 8292 --- [springBootTest] [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-21T13:48:17.023+08:00  WARN 8292 --- [springBootTest] [main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-21T13:48:17.320+08:00  INFO 8292 --- [springBootTest] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8081 (http) with context path '/'
+2026-09-21T13:48:17.339+08:00  INFO 8292 --- [springBootTest] [main] c.f.s.SpringBootTestApplication          : Started SpringBootTestApplication in 3.689 seconds (process running for 4.133)
+2026-09-21T13:48:29.386+08:00  INFO 8292 --- [springBootTest] [http-nio-8081-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-21T13:48:29.386+08:00  INFO 8292 --- [springBootTest] [http-nio-8081-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-09-21T13:48:29.387+08:00  INFO 8292 --- [springBootTest] [http-nio-8081-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-09-21T14:07:04.024+08:00  INFO 11396 --- [springBootTest] [main] c.f.s.SpringBootTestApplication          : Starting SpringBootTestApplication v0.0.1-SNAPSHOT using Java 21.0.10 with PID 11396 (D:\workSpace\springBootTest\target\springBootTest-0.0.1-SNAPSHOT.jar started by Administrator in D:\workSpace\springBootTest)
+2026-09-21T14:07:04.028+08:00  INFO 11396 --- [springBootTest] [main] c.f.s.SpringBootTestApplication          : The following 1 profile is active: "dev"
+2026-09-21T14:07:04.651+08:00  INFO 11396 --- [springBootTest] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-21T14:07:04.709+08:00  INFO 11396 --- [springBootTest] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 49 ms. Found 2 JPA repository interfaces.
+2026-09-21T14:07:05.196+08:00  INFO 11396 --- [springBootTest] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8081 (http)
+2026-09-21T14:07:05.213+08:00  INFO 11396 --- [springBootTest] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-09-21T14:07:05.213+08:00  INFO 11396 --- [springBootTest] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.40]
+2026-09-21T14:07:05.251+08:00  INFO 11396 --- [springBootTest] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-09-21T14:07:05.252+08:00  INFO 11396 --- [springBootTest] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1185 ms
+2026-09-21T14:07:05.418+08:00  INFO 11396 --- [springBootTest] [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-09-21T14:07:05.471+08:00  INFO 11396 --- [springBootTest] [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.13.Final
+2026-09-21T14:07:05.506+08:00  INFO 11396 --- [springBootTest] [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-09-21T14:07:05.797+08:00  INFO 11396 --- [springBootTest] [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-21T14:07:05.829+08:00  INFO 11396 --- [springBootTest] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-09-21T14:07:06.015+08:00  INFO 11396 --- [springBootTest] [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@45cd8607
+2026-09-21T14:07:06.016+08:00  INFO 11396 --- [springBootTest] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-09-21T14:07:06.082+08:00  INFO 11396 --- [springBootTest] [main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 8.0.39
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-21T14:07:06.713+08:00  INFO 11396 --- [springBootTest] [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-21T14:07:06.753+08:00  INFO 11396 --- [springBootTest] [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-21T14:07:07.093+08:00  WARN 11396 --- [springBootTest] [main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-21T14:07:07.447+08:00  INFO 11396 --- [springBootTest] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8081 (http) with context path '/'
+2026-09-21T14:07:07.468+08:00  INFO 11396 --- [springBootTest] [main] c.f.s.SpringBootTestApplication          : Started SpringBootTestApplication in 3.957 seconds (process running for 4.379)
+2026-09-21T14:07:17.653+08:00  INFO 11396 --- [springBootTest] [http-nio-8081-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-21T14:07:17.653+08:00  INFO 11396 --- [springBootTest] [http-nio-8081-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-09-21T14:07:17.654+08:00  INFO 11396 --- [springBootTest] [http-nio-8081-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+2026-09-21T15:28:32.984+08:00  INFO 8144 --- [springBootTest] [main] c.f.s.SpringBootTestApplication          : Starting SpringBootTestApplication v0.0.1-SNAPSHOT using Java 21.0.10 with PID 8144 (D:\workSpace\springBootTest\target\springBootTest-0.0.1-SNAPSHOT.jar started by Administrator in D:\workSpace\springBootTest)
+2026-09-21T15:28:32.987+08:00  INFO 8144 --- [springBootTest] [main] c.f.s.SpringBootTestApplication          : The following 1 profile is active: "dev"
+2026-09-21T15:28:33.604+08:00  INFO 8144 --- [springBootTest] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-21T15:28:33.662+08:00  INFO 8144 --- [springBootTest] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 46 ms. Found 2 JPA repository interfaces.
+2026-09-21T15:28:34.119+08:00  INFO 8144 --- [springBootTest] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8081 (http)
+2026-09-21T15:28:34.134+08:00  INFO 8144 --- [springBootTest] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-09-21T15:28:34.135+08:00  INFO 8144 --- [springBootTest] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.40]
+2026-09-21T15:28:34.168+08:00  INFO 8144 --- [springBootTest] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-09-21T15:28:34.168+08:00  INFO 8144 --- [springBootTest] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1137 ms
+2026-09-21T15:28:34.333+08:00  INFO 8144 --- [springBootTest] [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-09-21T15:28:34.399+08:00  INFO 8144 --- [springBootTest] [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.13.Final
+2026-09-21T15:28:34.434+08:00  INFO 8144 --- [springBootTest] [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-09-21T15:28:34.746+08:00  INFO 8144 --- [springBootTest] [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-21T15:28:34.779+08:00  INFO 8144 --- [springBootTest] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-09-21T15:28:34.948+08:00  INFO 8144 --- [springBootTest] [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@44d43cc9
+2026-09-21T15:28:34.950+08:00  INFO 8144 --- [springBootTest] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-09-21T15:28:35.022+08:00  INFO 8144 --- [springBootTest] [main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 8.0.39
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-21T15:28:35.727+08:00  INFO 8144 --- [springBootTest] [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-21T15:28:35.765+08:00  INFO 8144 --- [springBootTest] [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-21T15:28:36.082+08:00  WARN 8144 --- [springBootTest] [main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-21T15:28:36.407+08:00  INFO 8144 --- [springBootTest] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8081 (http) with context path '/'
+2026-09-21T15:28:36.425+08:00  INFO 8144 --- [springBootTest] [main] c.f.s.SpringBootTestApplication          : Started SpringBootTestApplication in 3.956 seconds (process running for 4.492)
+2026-09-21T15:29:08.892+08:00  INFO 8144 --- [springBootTest] [http-nio-8081-exec-2] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-21T15:29:08.893+08:00  INFO 8144 --- [springBootTest] [http-nio-8081-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-09-21T15:29:08.894+08:00  INFO 8144 --- [springBootTest] [http-nio-8081-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
