@@ -32,3 +32,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# 清理工具归档的 .git 压缩包，不入库
+.git.rar
