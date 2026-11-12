@@ -1,0 +1,290 @@
+import App from '@system.app';
+
+@Entry
+@Component
+struct Index {
+  @State message: string = 'Hello World';
+
+  build() {
+    Column() {
+      /*头部固定区域盒子*/
+      Row(){
+        Text('起点中文网')
+          .fontColor("#ffd62424")
+          .fontWeight(FontWeight.Bold)//文字加粗
+
+
+        Button('男生')
+          .type(ButtonType.Normal)
+          .fontColor(Color.Orange)
+          .backgroundColor('#ff21a7e5')
+
+        Button('女生')
+          .type(ButtonType.Normal)
+          .fontColor(Color.Pink)
+          .backgroundColor('#ffea58ab')
+
+        Row(){
+          Text('打开APP')
+            .fontColor(Color.Pink)
+            .fontSize(12)//文字大小，设置小一点
+            .backgroundColor("#ffef3c67")
+            .borderRadius(20)
+            .padding(7)//内边距
+            .margin({right:8})//右外边距
+
+          Image($r('app.media.search'))
+            .width(25)
+        }
+      }
+      .justifyContent(FlexAlign.SpaceBetween)
+      .width('100%')
+      .height('6%')
+
+      /*页面长滚动区域*/
+      Scroll(){
+        /*Scroll里面必须写一个容器子组件，而且只能有一个，所有内容写在该容器子组件中*/
+        Column(){
+          /*搜索框*/
+          Search()
+            .width('100%')
+
+          /*轮播图*/
+          Swiper(){
+            Image('https://bossaudioandcomic-1252317822.image.myqcloud.com/activity/document/36243d836fe1cf98a7a74056c0c4ae11.jpg')
+              .width('100%')
+            Image('https://bossaudioandcomic-1252317822.image.myqcloud.com/activity/document/63bb0be50cb03167509cf0dee9a590ba.jpg')
+              .width('100%')
+            Image('https://bossaudioandcomic-1252317822.image.myqcloud.com/activity/document/b4a86ed4badfa4d27dd59de2d9f0dea9.jpg')
+              .width('100%')
+            Image('https://bossaudioandcomic-1252317822.image.myqcloud.com/activity/document/81e39c9176bfc2db0153c4decec6559f.jpg')
+              .width('100%')
+          }
+          .autoPlay(true)//开启自动轮播
+          .interval(2000)//轮播间隔时常1000为1秒
+          .borderRadius(15)
+          .width('100%')
+
+          /*分类区域*/
+          List(){
+
+            ListItem(){
+              Column(){
+                Image('https://imgservices-1252317822.image.myqcloud.com/coco/s09082023/c120ddc7.66tydz.png')
+                  .width(50)
+                Text('分类')
+              }
+              .width('20%')
+              .height('100%')
+            }
+
+            ListItem(){
+              Column(){
+                Image('https://imgservices-1252317822.image.myqcloud.com/coco/s09082023/c6673b84.zuil3k.png')
+                  .width(50)
+                Text('排行榜')
+              }
+              .width('20%')
+              .height('100%')
+            }
+
+            ListItem(){
+              Column(){
+                Image('https://imgservices-1252317822.image.myqcloud.com/coco/s09082023/ccc9e198.hh0sph.png')
+                  .width(50)
+                Text('免费')
+              }
+              .width('20%')
+              .height('100%')
+            }
+
+            ListItem(){
+              Column(){
+                Image('https://imgservices-1252317822.image.myqcloud.com/coco/s09082023/403e0032.vfw574.png')
+                  .width(50)
+                Text('完本')
+              }
+              .width('20%')
+              .height('100%')
+            }
+
+            ListItem(){
+              Column(){
+                Image('https://imgservices-1252317822.image.myqcloud.com/coco/s09082023/8d57d2fc.rmfht6.png')
+                  .width(50)
+                Text('大神')
+              }
+              .width('20%')
+              .height('100%')
+            }
+
+            ListItem(){
+              Column(){
+                Image('https://imgservices-1252317822.image.myqcloud.com/coco/s09082023/1ca7c55a.h69hv4.png')
+                  .width(50)
+                Text('书单')
+              }
+              .width('20%')
+              .height('100%')
+            }
+
+            ListItem(){
+              Column(){
+                Image('https://imgservices-1252317822.image.myqcloud.com/statics/qdAssets/icon-newcolumn.png')
+                  .width(50)
+                Text('专栏')
+              }
+              .width('20%')
+              .height('100%')
+            }
+
+
+          }
+          .listDirection(Axis.Horizontal)//更改列表方向为水平，默认为垂直
+          .width('100%')
+          .height(70)
+          .borderRadius(15)
+          .margin({top:15})//距离上方有15的外边距
+          .backgroundColor(Color.White)
+
+
+          Row(){
+            Text("起点")
+              .backgroundColor(Color.Red)
+              .fontSize(20)
+              .borderRadius(10)
+              .fontColor(Color.White)
+              .fontWeight(FontWeight.Bold)
+              .padding({left:5,right:5,top:15,bottom:15})
+
+            Column(){
+              Text('上起点读书App，看海量免费小说')
+                .fontSize(12)
+                .padding({bottom:6,left:3})
+              Text('海量小说，新人免费读14天')
+                .fontSize(10)
+                .fontColor(Color.Gray)
+                .padding({left:3})
+            }
+            .alignItems(HorizontalAlign.Start)
+
+            Text("立即下载")
+              .fontSize(14)
+              .padding(5)
+              .backgroundColor(Color.Red)
+              .borderRadius(29)
+          }
+          .justifyContent(FlexAlign.SpaceBetween)
+          .width('100%')
+          .borderRadius(15)
+          .margin({top:10})
+          .padding(10)
+          .backgroundColor(Color.White)
+
+          Column(){
+            Row(){
+              Row(){
+                Text('新人必读')
+                  .fontSize(18)
+                  .fontWeight(FontWeight.Bold)
+                Text('起点优质书单')
+                  .fontSize(12)
+                  .fontColor(Color.Gray)
+                  .margin({left:5})
+
+              }
+              Row(){
+                Image($r('app.media.shuaxin'))
+                  .width(12)
+                  .margin({right:5})
+                  .fillColor(Color.Blue)
+                Text('换一批')
+                  .fontColor('#ff138ae5')
+
+
+
+              }
+            }
+            .justifyContent(FlexAlign.SpaceBetween)
+            .width('100%')
+
+            Row(){
+              Column(){
+                Image('https://bookcover.yuewen.com/qdbimg/349573/1049789492/180')
+                  .width('100%')
+                Text('诸天大邪修')
+                  .maxLines(2)
+                  .textOverflow({overflow:TextOverflow.Ellipsis})
+                  .fontSize(12)
+                Text('诸天无限·诸天')
+                  .fontSize(10)
+              }
+              .alignItems(HorizontalAlign.Start)
+              .width('22%')
+              .height(135)
+
+              Column(){
+                Image('https://bookcover.yuewen.com/qdbimg/349573/1046167790/180')
+                  .width('100%')
+                Text('喧嚣未及之处')
+                  .maxLines(2)
+                  .textOverflow({overflow:TextOverflow.Ellipsis})
+                  .fontSize(12)
+                Text('体育·篮球运动')
+                  .fontSize(10)
+
+              }
+              .alignItems(HorizontalAlign.Start)
+              .width('22%')
+              .height(135)
+
+              Column(){
+                Image('https://bookcover.yuewen.com/qdbimg/349573/1049431206/180')
+                  .width('100%')
+                Text('融合狼蛛基因，在俄乌战场杀疯了在线阅读')
+                  .maxLines(2)
+                  .textOverflow({overflow:TextOverflow.Ellipsis})
+                  .fontSize(12)
+                Text('军事·战争幻想')
+                  .fontSize(10)
+              }
+              .alignItems(HorizontalAlign.Start)
+              .width('22%')
+              .height(135)
+
+              Column(){
+                Image('https://bookcover.yuewen.com/qdbimg/349573/1040840487/180')
+                  .width('100%')
+                Text('我的魔法没有上限')
+                  .maxLines(2)
+                  .textOverflow({overflow:TextOverflow.Ellipsis})
+                  .fontSize(12)
+                Text('奇幻·剑与魔法')
+                  .fontSize(10)
+              }
+              .alignItems(HorizontalAlign.Start)
+              .width('22%')
+              .height(135)
+            }
+
+
+          }
+          .width('100%')
+          .borderRadius(15)
+          .margin({top:10})
+          .padding(10)
+          .backgroundColor(Color.White)
+
+
+        }
+      }
+      .width('100%')
+      .height('94%')
+
+    }
+    .padding({right:12,left:12})
+    .height('100%')
+    .width('100%')
+    .backgroundColor('#ffcdc1cc')
+  }
+}
