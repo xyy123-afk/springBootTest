@@ -1,0 +1,2649 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>微光共鸣 · PIXEL TAMER</title>
+<style>
+:root{
+  --ink:#20242c; --grey:#8d96a3; --paper:#eef1f5; --line:#c9d0d9;
+  --accent:#e0603a; --ok:#4fae54;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Segoe UI","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{display:flex;flex-direction:column;align-items:center;gap:12px}
+.device{
+  background:linear-gradient(#3a4048,#232830);
+  border-radius:20px;padding:14px 14px 12px;
+  box-shadow:0 18px 40px rgba(20,26,34,.28), inset 0 1px 0 rgba(255,255,255,.14);
+  border:1px solid #1a1f26;
+}
+.device-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 6px 10px;
+}
+.brand{
+  font-size:11px;letter-spacing:.22em;color:#cfd6df;font-weight:700;
+  font-family:ui-monospace,Consolas,monospace;
+}
+.leds{display:flex;gap:5px}
+.leds i{width:6px;height:6px;border-radius:50%;background:#4b535e;display:block}
+.leds i:nth-child(1){background:#e0603a;box-shadow:0 0 6px #e0603a}
+.screen{
+  position:relative;width:640px;height:448px;background:#0e1116;
+  border-radius:6px;overflow:hidden;
+  box-shadow:inset 0 0 0 3px #11151a, 0 0 0 6px #171b21;
+}
+.screen::after{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:60;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,rgba(0,0,0,0) 1px 3px);
+  mix-blend-mode:multiply;opacity:.55;
+}
+#world{position:absolute;inset:0;width:640px;height:448px;image-rendering:pixelated}
+.layer{position:absolute;inset:0;z-index:20}
+.hidden{display:none!important}
+
+/* ---------- HUD ---------- */
+#hud{
+  z-index:30;padding:8px 10px;display:flex;justify-content:space-between;
+  align-items:flex-start;pointer-events:none;color:#f2f6fa;font-size:11px;
+  text-shadow:0 1px 0 #000,0 0 4px rgba(0,0,0,.7);
+}
+#locName{background:rgba(10,14,20,.6);padding:3px 8px;border-radius:3px;letter-spacing:.06em}
+#hudParty{display:flex;gap:4px}
+#hudShard{background:rgba(10,14,20,.6);padding:2px 6px;border-radius:3px;
+  font-family:ui-monospace,monospace;font-size:10px;margin-right:5px;color:#ffd76a}
+.pchip{display:flex;align-items:center;gap:3px;background:rgba(10,14,20,.6);padding:2px 5px;border-radius:3px}
+.pchip i{width:16px;height:4px;background:#4b535e;border-radius:2px;display:block;overflow:hidden}
+.pchip i b{display:block;height:4px;background:#5ec46a}
+
+/* ---------- 通用面板 ---------- */
+.panel{
+  background:#f7f8fa;color:var(--ink);border:3px solid var(--ink);
+  border-radius:5px;box-shadow:0 5px 0 rgba(32,36,44,.35);
+}
+#dialog{
+  z-index:40;left:14px;right:14px;bottom:14px;top:auto;height:auto;padding:10px 14px;
+  font-size:13px;line-height:1.65;min-height:46px;
+}
+#dialog .tip{color:var(--grey);font-size:10px;margin-top:2px}
+
+/* ---------- 标题 ---------- */
+#title{z-index:55;background:#0b1017;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px}
+.logo{font-family:ui-monospace,Consolas,monospace;color:#f7f8fa;font-size:34px;letter-spacing:.16em;font-weight:700;
+  text-shadow:0 3px 0 #e0603a, 0 6px 14px rgba(0,0,0,.6)}
+.logo span{color:#e0603a}
+.sub{color:#9aa6b4;font-size:11px;letter-spacing:.3em}
+.starters{display:flex;gap:10px;margin-top:4px}
+.scard{
+  width:132px;background:#151c25;border:2px solid #2b3542;border-radius:6px;
+  padding:8px;color:#dfe6ee;text-align:center;cursor:pointer;transition:.15s;
+}
+.scard:hover{border-color:#e0603a;transform:translateY(-3px);background:#1b2430}
+.scard canvas{width:64px;height:64px;image-rendering:pixelated}
+.scard b{display:block;font-size:13px;margin-top:2px}
+.scard small{color:#8d96a3;font-size:10px}
+
+/* ---------- 战斗 ---------- */
+#battle{background:linear-gradient(#1b2734,#0d131a 70%);z-index:35}
+.b-bg{position:absolute;inset:0;opacity:.5;
+  background:
+   radial-gradient(circle at 70% 26%, rgba(88,140,190,.35), transparent 42%),
+   radial-gradient(circle at 26% 68%, rgba(224,96,58,.16), transparent 40%);}
+.arena{position:absolute;left:0;right:0;top:0;bottom:124px;padding:12px 14px;
+  display:flex;flex-direction:column;justify-content:space-between}
+.side{display:flex;align-items:center;gap:10px}
+.side.enemy{justify-content:flex-end}
+.side.mine{justify-content:flex-start}
+.card{width:196px;background:rgba(247,248,250,.95);border:2px solid #10151b;border-radius:4px;padding:6px 8px}
+.row1{display:flex;justify-content:space-between;align-items:baseline;font-size:12px}
+.row1 b{font-size:12.5px;letter-spacing:.04em}
+.row1 span{color:#6d7683;font-size:10px;font-family:ui-monospace,Consolas,monospace}
+.hpbar{position:relative;height:7px;background:#cfd6df;border:1px solid #10151b;border-radius:2px;margin-top:4px;overflow:hidden}
+.hpbar i{display:block;height:100%;width:100%;background:#5ec46a;transition:width .28s ease}
+.hpbar.low i{background:#e0603a}
+.xpbar{height:3px;background:#dfe4ea;border-radius:2px;margin-top:3px;overflow:hidden}
+.xpbar i{display:block;height:100%;width:0;background:#5b8fd0;transition:width .3s}
+.tags{display:flex;align-items:center;gap:6px;margin-top:5px}
+.chip{font-size:9.5px;padding:1px 6px;border-radius:9px;color:#fff;background:#9aa3ad;letter-spacing:.06em}
+.pips{display:flex;gap:3px;margin-left:auto}
+.pips b{width:9px;height:9px;border-radius:50%;background:#cfd6df;border:1px solid #9aa3ad;display:block}
+.pips b.on{background:#e0603a;border-color:#7a2a1a;box-shadow:0 0 5px rgba(224,96,58,.7)}
+.sprite{width:112px;height:112px;image-rendering:pixelated;filter:drop-shadow(0 6px 6px rgba(0,0,0,.5))}
+.side.mine .sprite{order:0}
+.bmsg{
+  position:absolute;left:14px;right:14px;bottom:90px;height:30px;display:flex;align-items:center;
+  padding:0 12px;font-size:12.5px;color:#eef3f8;background:rgba(8,12,17,.82);
+  border-left:3px solid var(--accent);border-radius:3px;
+}
+.bactions{position:absolute;left:12px;right:12px;bottom:8px;display:flex;flex-direction:column;gap:5px}
+.brow{display:grid;gap:5px}
+.brow.moves{grid-template-columns:repeat(4,1fr)}
+.brow.util{grid-template-columns:repeat(5,1fr)}
+.brow.switch{grid-template-columns:repeat(auto-fit,minmax(92px,1fr))}
+.bactions button{
+  font-family:inherit;font-size:11.5px;color:#f2f6fa;background:#1d2530;
+  border:1.5px solid #3a4654;border-radius:3px;padding:6px 2px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.25;
+  transition:.12s;
+}
+.bactions button:hover:not(:disabled){background:#2b3a4c;border-color:#6f8aa8;transform:translateY(-1px)}
+.bactions button:disabled{opacity:.35;cursor:not-allowed}
+.bactions button small{font-size:9px;color:#8fa0b3;font-family:ui-monospace,monospace}
+.bactions button .t{font-size:8.5px;padding:0 4px;border-radius:6px;color:#fff}
+
+/* ---------- 天气横幅 ---------- */
+#weatherBar{
+  position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:36;
+  background:rgba(8,12,17,.78);color:#eef3f8;font-size:10.5px;letter-spacing:.1em;
+  padding:3px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);
+  pointer-events:none;
+}
+#weatherBar.rain{color:#bfe4f7;border-color:#4a86c8}
+#weatherBar.sunny{color:#ffd08a;border-color:#e0603a}
+#weatherBar.wind{color:#cfeef5;border-color:#5fbfd6}
+
+/* ---------- 状态标签 ---------- */
+.status-tag{
+  display:inline-block;font-size:8.5px;padding:1px 5px;border-radius:6px;color:#fff;
+  margin-left:4px;vertical-align:middle;
+}
+
+/* ---------- 伤害飘字 ---------- */
+.floaty{
+  position:absolute;z-index:38;font-family:ui-monospace,Consolas,monospace;
+  font-weight:700;pointer-events:none;text-shadow:0 1px 0 #000,0 0 6px rgba(0,0,0,.5);
+  transition:transform .7s cubic-bezier(.2,.7,.3,1), opacity .7s;opacity:0;
+}
+.floaty.show{opacity:1}
+
+/* ---------- 屏幕震动 ---------- */
+.shake{animation:shake .3s}
+@keyframes shake{
+  0%,100%{transform:translate(0,0)}20%{transform:translate(-3px,2px)}
+  40%{transform:translate(3px,-2px)}60%{transform:translate(-2px,1px)}80%{transform:translate(2px,-1px)}
+}
+
+/* ---------- 节拍小游戏 ---------- */
+#timing{z-index:50;background:rgba(8,12,17,.9);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;color:#eef3f8;padding:20px}
+#timing h3{margin:0;font-size:14px;letter-spacing:.16em;font-weight:600}
+.track{position:relative;width:400px;height:26px;background:#1b2430;border:3px solid #eef3f8;
+  border-radius:14px;overflow:hidden;box-shadow:inset 0 0 12px rgba(0,0,0,.7)}
+.zone{position:absolute;top:0;bottom:0;background:linear-gradient(#5ec46a,#2f7a44);opacity:.9}
+.needle{position:absolute;top:-8px;bottom:-8px;width:4px;background:#fff;box-shadow:0 0 8px #fff;border-radius:2px}
+#tfb{font-size:22px;font-weight:700;letter-spacing:.14em;height:30px;
+  font-family:ui-monospace,Consolas,monospace;color:#e8b530}
+#tfb.perfect{color:#ffd76a;text-shadow:0 0 14px rgba(255,215,106,.8)}
+#tfb.good{color:#7fd48a}
+#tfb.miss{color:#e0603a}
+#tcount{font-size:10.5px;color:#9aa6b4;letter-spacing:.2em}
+
+/* ---------- 菜单 ---------- */
+#menu{z-index:45;background:rgba(8,12,17,.82);display:flex;align-items:center;justify-content:center;padding:20px}
+.mpanel{width:400px;padding:14px 16px;max-height:410px;overflow:auto}
+.mpanel h3{margin:0 0 8px;font-size:13px;letter-spacing:.1em;display:flex;justify-content:space-between}
+.mrow{display:flex;align-items:center;gap:8px;font-size:11.5px;padding:5px 0;border-top:1px solid #e2e7ed}
+.mrow:first-of-type{border-top:none}
+.mrow i{flex:1;height:6px;background:#dfe4ea;border-radius:2px;overflow:hidden;display:block}
+.mrow i b{display:block;height:6px;background:#5ec46a}
+.mrow em{font-style:normal;font-family:ui-monospace,monospace;font-size:10px;color:#6d7683;min-width:56px;text-align:right}
+.mrow.down b,.mrow.down em{color:#b06a5a}
+.mrow.down i b{background:#b06a5a}
+.mrow.sel{background:#fff6f1}
+.mdetail{display:none;padding:6px 8px 8px;background:#f4f7fa;border:1px solid #e2e7ed;
+  border-top:none;border-radius:0 0 4px 4px;font-size:10px;color:#5f6672;line-height:1.7}
+.mdetail.open{display:block}
+.dline{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dops{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}
+.dops button{flex:1;min-width:64px;font-family:inherit;font-size:10px;padding:5px 2px;
+  border:1.5px solid #cfd6df;background:#fff;border-radius:3px;cursor:pointer;color:#3a4654}
+.dops button:hover:not(:disabled){background:#ffe9c9;border-color:#e0603a}
+.dops button:disabled{opacity:.4;cursor:not-allowed}
+.mbtn{display:flex;gap:6px;margin-top:10px}
+.mbtn button{flex:1;font-family:inherit;font-size:11.5px;padding:7px;border:2px solid var(--ink);
+  background:#fff;border-radius:3px;cursor:pointer}
+.mbtn button:hover{background:#ffe9c9}
+.mbtn button.primary{background:var(--ink);color:#fff}
+.mbtn button.primary:hover{background:#3a4048}
+
+/* ---------- 商店 ---------- */
+#shop{z-index:46;background:rgba(8,12,17,.82);display:flex;align-items:center;justify-content:center;padding:20px}
+.spanel{width:400px;padding:14px 16px;max-height:410px;overflow:auto}
+.spanel h3{margin:0 0 8px;font-size:13px;letter-spacing:.1em;display:flex;justify-content:space-between;align-items:center}
+.wallet{font-family:ui-monospace,monospace;font-size:11px;color:#8a5a12;background:#ffe9c9;
+  border:1px solid #e2c79a;border-radius:3px;padding:2px 7px}
+.srow{display:flex;align-items:center;gap:9px;padding:7px 0;border-top:1px solid #e2e7ed}
+.srow:first-of-type{border-top:none}
+.srow .sicon{width:22px;height:22px;border-radius:4px;background:#20242c;color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:11px;flex:none}
+.srow .stxt{flex:1;min-width:0}
+.srow .stxt b{font-size:12px;display:block}
+.srow .stxt small{font-size:10px;color:#7d8794;display:block;line-height:1.4}
+.srow .sown{font-family:ui-monospace,monospace;font-size:10px;color:#7d8794;min-width:34px;text-align:center}
+.srow button{
+  font-family:inherit;font-size:11px;padding:5px 10px;border:2px solid var(--ink);
+  background:#fff;border-radius:3px;cursor:pointer;white-space:nowrap;
+}
+.srow button:hover:not(:disabled){background:#ffe9c9}
+.srow button:disabled{opacity:.42;cursor:not-allowed}
+.mrow.pick{cursor:pointer}
+.mrow.pick:hover{background:#fff4e8}
+#mTip{margin-top:6px;font-size:10.5px;color:#a8642c;min-height:14px;line-height:1.5}
+
+/* ---------- 手柄 ---------- */
+.device-foot{display:flex;align-items:center;justify-content:space-between;padding:12px 6px 2px;gap:10px}
+.dpad{display:grid;grid-template-columns:repeat(3,26px);grid-template-rows:repeat(3,26px);gap:2px}
+.dpad button{
+  background:#4b535e;border:none;border-radius:4px;cursor:pointer;color:#cfd6df;
+  font-size:11px;box-shadow:0 2px 0 #171b21;
+}
+.dpad button:active{transform:translateY(1px);box-shadow:none}
+.dpad .sp{background:transparent;box-shadow:none;pointer-events:none}
+.ab{display:flex;gap:8px}
+.ab button{
+  width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;
+  background:#e0603a;color:#fff;font-weight:700;font-size:13px;
+  box-shadow:0 3px 0 #8a3520;font-family:inherit;
+}
+.ab button:last-child{background:#5b8fd0;box-shadow:0 3px 0 #33547d}
+.ab button:active{transform:translateY(2px);box-shadow:none}
+.hint{color:#8d96a3;font-size:10px;text-align:center;line-height:1.5;font-family:ui-monospace,monospace}
+.wrap .note{color:#7d8794;font-size:11px;text-align:center}
+
+/* ---------- 标题按钮 ---------- */
+.tbtns{display:flex;gap:8px;margin-bottom:2px}
+.tbtn{
+  font-family:inherit;font-size:12px;padding:7px 16px;border-radius:4px;cursor:pointer;
+  background:#151c25;color:#dfe6ee;border:2px solid #3a4654;transition:.15s;
+}
+.tbtn:hover{border-color:#e0603a;transform:translateY(-2px)}
+.tbtn.primary{background:#e0603a;border-color:#e0603a;color:#fff}
+.tbtn.primary:hover{background:#c94e2c;border-color:#c94e2c}
+.tbtn small{display:block;font-size:9px;opacity:.85;font-family:ui-monospace,monospace;margin-top:1px}
+
+/* ---------- 静音 ---------- */
+#hudRight{display:flex;align-items:center}
+#btnMute{
+  pointer-events:auto;margin-left:6px;width:24px;height:18px;border-radius:3px;cursor:pointer;
+  background:rgba(10,14,20,.6);border:1px solid rgba(255,255,255,.28);color:#dfe6ee;
+  font-size:10px;line-height:1;padding:0;font-family:inherit;
+}
+#btnMute.off{color:#8d96a3;text-decoration:line-through;border-color:rgba(255,255,255,.14)}
+
+/* ---------- 菜单 tabs / 图鉴 ---------- */
+.tabs{display:flex;gap:5px;margin-bottom:8px}
+.tabs button{
+  flex:1;font-family:inherit;font-size:11px;padding:5px;cursor:pointer;
+  background:#eef1f5;border:1.5px solid #cfd6df;border-radius:3px;color:#5f6672;
+}
+.tabs button.on{background:#20242c;border-color:#20242c;color:#fff}
+#mDex{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.dxcell{background:#fff;border:1.5px solid #cfd6df;border-radius:4px;padding:3px;text-align:center;
+  font-size:10px;cursor:pointer;color:#5f6672;transition:.12s}
+.dxcell:hover{border-color:#a9b3bf}
+.dxcell.seen{background:#eef1f5;color:#9aa3ad}
+.dxcell.sel{border-color:#e0603a;background:#fff6f1;color:#20242c}
+.dxcell canvas{width:48px;height:48px;image-rendering:pixelated;display:block;margin:0 auto}
+.dxdesc{margin-top:8px;font-size:10.5px;line-height:1.65;color:#5f6672;min-height:36px;
+  border-top:1px dashed #dfe4ea;padding-top:6px}
+.dxdesc b{color:#20242c}
+@media (max-width: 780px){
+  body{padding:10px}
+  .device{zoom:.78}
+}
+@media (max-width: 620px){
+  .device{zoom:.6}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="device">
+    <div class="device-head">
+      <span class="brand">PIXEL TAMER</span>
+      <span class="leds"><i></i><i></i><i></i></span>
+    </div>
+
+    <div class="screen">
+      <canvas id="world" width="320" height="224"></canvas>
+      <div id="hud" class="layer">
+        <span id="locName">微光镇</span>
+        <span id="hudRight"><span id="hudShard">◈ 0</span><span id="hudParty"></span><button id="btnMute" title="音效开关">♪</button></span>
+      </div>
+
+      <div id="title" class="layer">
+        <div class="logo">微光<span>共鸣</span></div>
+        <div class="sub">A TINY PIXEL MONSTER TALE</div>
+        <div class="tbtns" id="titleBtns"></div>
+        <div class="starters" id="starterList"></div>
+        <div class="sub" style="letter-spacing:.1em;font-size:10px;margin-top:2px">选择你的第一位伙伴</div>
+      </div>
+
+      <div id="battle" class="layer hidden">
+        <div class="b-bg"></div>
+        <div id="weatherBar" class="hidden"></div>
+        <div id="floatyLayer" style="position:absolute;inset:0;z-index:37;pointer-events:none"></div>
+        <div class="arena">
+          <div class="side enemy">
+            <div class="card">
+              <div class="row1"><b id="eName">??</b><span id="eLv">Lv.1</span></div>
+              <div class="hpbar" id="eHpWrap"><i id="eHp"></i></div>
+              <div class="tags"><span class="chip" id="eType">普通</span>
+                <span class="pips" id="ePips"></span></div>
+            </div>
+            <canvas class="sprite" id="eSprite" width="112" height="112"></canvas>
+          </div>
+          <div class="side mine">
+            <canvas class="sprite" id="pSprite" width="112" height="112"></canvas>
+            <div class="card">
+              <div class="row1"><b id="pName">??</b><span id="pLv">Lv.1</span></div>
+              <div class="hpbar" id="pHpWrap"><i id="pHp"></i></div>
+              <div class="xpbar"><i id="pXp"></i></div>
+              <div class="tags"><span class="chip" id="pType">普通</span>
+                <span class="pips" id="pPips"></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="bmsg" id="bMsg">……</div>
+        <div class="bactions" id="bActions"></div>
+      </div>
+
+      <div id="dialog" class="layer hidden"></div>
+
+      <div id="timing" class="layer hidden">
+        <h3 id="tTitle">节拍共鸣</h3>
+        <div class="track">
+          <div class="zone" id="tZone"></div>
+          <div class="needle" id="tNeedle"></div>
+        </div>
+        <div id="tfb">READY</div>
+        <div id="tcount">按 空格 / 点击</div>
+      </div>
+
+      <div id="menu" class="layer hidden">
+        <div class="mpanel panel">
+          <h3><span id="mTitle">队伍</span><span id="mBag" style="font-size:10px;color:#6d7683"></span></h3>
+          <div class="tabs">
+            <button data-tab="party" class="on">队伍</button>
+            <button data-tab="box">寄存</button>
+            <button data-tab="dex">图鉴</button>
+          </div>
+          <div id="mList"></div>
+          <div id="mDexWrap" class="hidden">
+            <div id="mDex"></div>
+            <div class="dxdesc" id="mDexDesc">点一格看看笔记。</div>
+          </div>
+          <div id="mTip"></div>
+          <div class="mbtn">
+            <button class="primary" id="mCamp">篝火共鸣</button>
+            <button id="mSave">保存</button>
+            <button id="mClose">关闭</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="shop" class="layer hidden">
+        <div class="spanel panel">
+          <h3><span id="sTitle">杂货摊</span><span class="wallet" id="sWallet">◈ 0</span></h3>
+          <div id="sList"></div>
+          <div class="mbtn"><button id="sClose">离开</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="device-foot">
+      <div class="dpad">
+        <span class="sp"></span><button data-dir="up">▲</button><span class="sp"></span>
+        <button data-dir="left">◀</button><span class="sp"></span><button data-dir="right">▶</button>
+        <span class="sp"></span><button data-dir="down">▼</button><span class="sp"></span>
+      </div>
+      <div class="hint">方向键 移动<br>空格 交互 · M 菜单</div>
+      <div class="ab"><button id="btnB">B</button><button id="btnA">A</button></div>
+    </div>
+  </div>
+  <div class="note">纯 Canvas 程序化像素 · 无外部素材 · 单文件可运行</div>
+</div>
+
+<script>
+"use strict";
+/* =========================================================
+   微光共鸣 PIXEL TAMER —— 回合制像素怪物 RPG 框架
+   架构：数据层 → 像素美术层 → 世界层 → 战斗层 → 小游戏层 → 主循环
+   ========================================================= */
+
+/* ---------------- 0. 工具 ---------------- */
+const $ = s => document.querySelector(s);
+const rnd = n => Math.floor(Math.random() * n);
+const pickOne = a => a[rnd(a.length)];
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+/* ---------------- 1. 数据层 ---------------- */
+const TYPE_NAME = { plain:'普通', fire:'火', water:'水', grass:'草', volt:'电', rock:'岩', gale:'风' };
+const TYPE_COLOR = { plain:'#9aa3ad', fire:'#e0603a', water:'#4a86c8', grass:'#4fae54',
+                     volt:'#d8a72c', rock:'#9c8f78', gale:'#5fbfd6' };
+
+/* 克制表：只写有倍率的组合，其余默认 1.0 */
+const CHART = {
+  fire : { grass:2, water:.5, rock:.5 },
+  water: { fire:2, rock:2, grass:.5, volt:.5 },
+  grass: { water:2, fire:.5, gale:.5 },
+  volt : { water:2, rock:.5, grass:.5 },
+  rock : { volt:2, grass:.5 },
+  gale : { grass:2, rock:.5 }
+};
+
+const MOVES = {
+  tackle : { name:'撞击', type:'plain', power:35, pp:30 },
+  ember  : { name:'火星', type:'fire',  power:40, pp:25, fx:{ burn:0.2 } },
+  blaze  : { name:'烈焰', type:'fire',  power:65, pp:10, fx:{ burn:0.4 } },
+  splash : { name:'水枪', type:'water', power:40, pp:25, fx:{ soak:0.2 } },
+  tide   : { name:'潮涌', type:'water', power:64, pp:10, fx:{ soak:0.35 } },
+  leafcut: { name:'叶刃', type:'grass', power:42, pp:25 },
+  vine   : { name:'藤鞭', type:'grass', power:64, pp:10, fx:{ bind:0.3 } },
+  spark  : { name:'电击', type:'volt',  power:40, pp:25, fx:{ para:0.2 } },
+  thunder: { name:'雷鸣', type:'volt',  power:66, pp:10, fx:{ para:0.35 } },
+  pebble : { name:'碎石', type:'rock',  power:45, pp:20, fx:{ harden:0.35 } },
+  boulder: { name:'落石', type:'rock',  power:68, pp:10 },
+  windcut: { name:'风刃', type:'gale',  power:40, pp:25 },
+  gust   : { name:'旋风', type:'gale',  power:64, pp:10, fx:{ flinch:0.25 } }
+};
+
+/* 状态异常：单目标同时最多 1 个（新异常覆盖旧异常） */
+const STATUS = {
+  burn : { name:'灼烧', color:'#e0603a', dot:true, dotPct:0.08, atkMul:0.8, text:'火焰灼烧着' },
+  soak : { name:'浸湿', color:'#4a86c8', spdMul:0.7, text:'浑身湿透了' },
+  para : { name:'麻痹', color:'#d8a72c', skip:0.25, spdMul:0.5, text:'麻痹了，行动迟缓' },
+  bind : { name:'束缚', color:'#4fae54', dot:true, dotPct:0.06, skip:0.5, text:'被藤蔓缠住' },
+  harden:{ name:'硬化', color:'#9c8f78', defMul:1.5, text:'岩石般坚硬' },
+  flinch:{ name:'畏缩', color:'#9aa3ad', skipAll:true, text:'畏缩了，无法行动' }
+};
+
+/* 天气：影响招式威力与状态 */
+const WEATHER = {
+  sunny: { name:'烈日', water:.5, fire:1.5, text:'阳光灼烈' },
+  rain : { name:'雨天', fire:.5, water:1.5, text:'雨声淅沥' },
+  wind : { name:'疾风', gale:1.3, spdBoost:0.15, text:'风起了' }
+};
+
+/* 种族数据：base 四维、catch 捕获基准、learn 技能表、art 美术描述 */
+const SPECIES = {
+  tan: { name:'炭仔', type:'fire', base:{hp:45,atk:52,def:45,spd:48}, catch:.42,
+    art:{ main:'#e0603a', dark:'#7a2a1a', belly:'#ffd08a', kind:'fire' },
+    learn:[[1,'tackle'],[1,'ember'],[9,'blaze']], evo:{lv:16,to:'tan2'},
+    desc:'尾尖常年燃着一小簇火苗，情绪高涨时会噼啪作响。' },
+  tan2:{ name:'炽炭兽', type:'fire', base:{hp:66,atk:76,def:64,spd:66}, catch:.16, evolved:true,
+    art:{ main:'#d24a2c', dark:'#5c1e12', belly:'#ffc266', kind:'fire' },
+    learn:[[1,'tackle'],[1,'ember'],[9,'blaze']],
+    desc:'体内像有座小熔炉，呼吸都带着热浪。' },
+
+  drop: { name:'露滴', type:'water', base:{hp:48,atk:48,def:50,spd:47}, catch:.42,
+    art:{ main:'#4a86c8', dark:'#1f3f66', belly:'#bfe4f7', kind:'water' },
+    learn:[[1,'tackle'],[1,'splash'],[9,'tide']], evo:{lv:16,to:'drop2'},
+    desc:'雨天会变得格外精神，头顶水膜能折射彩虹。' },
+  drop2:{ name:'澜波兽', type:'water', base:{hp:70,atk:70,def:72,spd:64}, catch:.16, evolved:true,
+    art:{ main:'#3a72b0', dark:'#16304d', belly:'#cdeafb', kind:'water' },
+    learn:[[1,'tackle'],[1,'splash'],[9,'tide']],
+    desc:'尾鳍拍水的声音像一段固定节拍。' },
+
+  bud: { name:'芽芽', type:'grass', base:{hp:50,atk:49,def:52,spd:45}, catch:.42,
+    art:{ main:'#63b85c', dark:'#2a5a2c', belly:'#e8f0b0', kind:'grass' },
+    learn:[[1,'tackle'],[1,'leafcut'],[9,'vine']], evo:{lv:16,to:'bud2'},
+    desc:'头顶嫩芽会朝着阳光慢慢转向，睡得比谁都久。' },
+  bud2:{ name:'藤冠兽', type:'grass', base:{hp:72,atk:72,def:76,spd:60}, catch:.16, evolved:true,
+    art:{ main:'#4d9c4b', dark:'#1f4422', belly:'#dfeaa2', kind:'grass' },
+    learn:[[1,'tackle'],[1,'leafcut'],[9,'vine']],
+    desc:'藤蔓编成的冠冕，是它成年后的标志。' },
+
+  zap: { name:'噼啪', type:'volt', base:{hp:42,atk:56,def:42,spd:62}, catch:.36,
+    art:{ main:'#e8b530', dark:'#7a5a10', belly:'#fff2c0', kind:'volt' },
+    learn:[[1,'tackle'],[1,'spark'],[12,'thunder']],
+    desc:'跑动时毛发会积起静电，最喜欢干燥的天气。' },
+
+  rock: { name:'石砾', type:'rock', base:{hp:58,atk:58,def:68,spd:30}, catch:.34,
+    art:{ main:'#9c8f78', dark:'#4a4238', belly:'#cfc4ac', kind:'rock' },
+    learn:[[1,'tackle'],[1,'pebble'],[12,'boulder']],
+    desc:'常年卧在洞窟深处，身上的纹路是岁月刻的。' },
+
+  gale: { name:'呼噜', type:'gale', base:{hp:44,atk:52,def:44,spd:60}, catch:.36,
+    art:{ main:'#93c9d8', dark:'#3d6b7a', belly:'#e2f6fb', kind:'gale' },
+    learn:[[1,'tackle'],[1,'windcut'],[12,'gust']],
+    desc:'睡眠时会轻轻浮起，据说梦里在飞。' }
+};
+
+/* ---------------- 2. 像素美术层 ---------------- */
+/* 全部图形由 16×16 逻辑网格 + 色块拼装，保证统一手感 */
+function P(g, s) { return (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x*s, y*s, w*s, h*s); }; }
+
+function blob(p, rows, ox, oy, color) {
+  for (let i = 0; i < rows.length; i++) {
+    const w = rows[i]; if (w <= 0) continue;
+    p(ox + ((16 - w) >> 1), oy + i, w, 1, color);
+  }
+}
+
+function drawMon(g, key, ox, oy, s, flip) {
+  const sp = SPECIES[key]; const a = sp.art; const big = !!sp.evolved;
+  g.save();
+  g.translate(ox, oy);
+  if (flip) { g.translate(16*s, 0); g.scale(-1, 1); }
+  const p = P(g, s);
+
+  const rows = big ? [7,10,13,14,14,14,14,14,12,9,6] : [5,8,10,12,12,12,12,11,9,7];
+  const ty = big ? 2 : 4;
+
+  /* 地面阴影 */
+  p(4, 14, 8, 1, 'rgba(0,0,0,.28)');
+  p(5, 13, 6, 1, 'rgba(0,0,0,.16)');
+
+  /* 耳朵 / 头顶附件（在身体之后会被覆盖，先画） */
+  if (a.kind === 'grass') {
+    p(6, ty-2, 1, 3, a.dark); p(7, ty-3, 1, 3, a.main);
+    p(9, ty-2, 1, 2, a.main); p(10, ty-3, 1, 2, a.dark);
+  }
+  if (a.kind === 'water') {
+    p(7, ty-3, 2, 3, a.main); p(7, ty-4, 1, 1, a.belly); p(8, ty-2, 1, 1, a.dark);
+  }
+  if (a.kind === 'volt') { p(5, ty-3, 2, 2, a.main); p(10, ty-3, 2, 2, a.main); }
+  if (a.kind === 'fire') { p(6, ty-2, 2, 2, a.main); p(9, ty-2, 2, 2, a.main); }
+  if (a.kind === 'rock') { p(5, ty-1, 3, 2, a.dark); p(9, ty-1, 3, 2, a.dark); }
+
+  /* 身体（先描边后填充） */
+  const outline = rows.map(w => w > 0 ? w + 2 : 0);
+  blob(p, outline, 0, ty - 1, a.dark);
+  blob(p, rows, 0, ty, a.main);
+  /* 肚皮高光 */
+  const belly = rows.map((w, i) => i > rows.length*0.55 ? Math.max(0, (w|0) - 6) : 0);
+  blob(p, belly, 0, ty + 1, a.belly);
+
+  /* 眼睛 */
+  const ey = ty + 3;
+  p(5, ey, 2, 2, a.dark); p(10, ey, 2, 2, a.dark);
+  p(5, ey, 1, 1, '#ffffff'); p(10, ey, 1, 1, '#ffffff');
+
+  /* 类型配件 */
+  if (a.kind === 'fire') { /* 尾巴火苗 */
+    p(13, ty+2, 2, 3, a.main); p(14, ty, 2, 2, '#ffb03a'); p(15, ty-1, 1, 1, '#ffe089');
+    p(12, ty+4, 2, 1, a.dark);
+  }
+  if (a.kind === 'water') { /* 尾鳍 */
+    p(13, ty+4, 2, 1, a.main); p(14, ty+2, 2, 3, a.main); p(15, ty+3, 1, 2, a.belly);
+  }
+  if (a.kind === 'grass') { /* 侧叶 */
+    p(2, ty+3, 2, 1, a.main); p(1, ty+2, 2, 1, a.dark); p(2, ty+4, 1, 1, a.main);
+  }
+  if (a.kind === 'volt') { /* 闪电尾 */
+    p(13, ty+3, 1, 2, '#fff2c0'); p(14, ty+4, 2, 2, a.main); p(15, ty+6, 1, 2, '#fff2c0');
+  }
+  if (a.kind === 'rock') { /* 岩甲 */
+    p(3, ty+5, 2, 2, a.dark); p(11, ty+5, 2, 2, a.dark);
+    p(6, ty+7, 4, 1, a.dark);
+  }
+  if (a.kind === 'gale') { /* 翅膀 */
+    p(1, ty+2, 3, 1, a.belly); p(0, ty+3, 2, 2, a.main); p(12, ty+2, 3, 1, a.belly);
+    p(14, ty+3, 2, 2, a.main);
+  }
+  /* 进化冠 */
+  if (big) { p(7, ty-2, 2, 2, '#ffd76a'); p(4, ty-1, 1, 2, '#ffd76a'); p(11, ty-1, 1, 2, '#ffd76a'); }
+  g.restore();
+}
+
+/* 主角 / NPC：16×16，两帧走路 */
+function drawHuman(g, ox, oy, s, opt) {
+  const o = Object.assign({ hat:'#e0603a', body:'#4a6fa5', skin:'#f3c9a2', dark:'#2b2b33', bob:0 }, opt);
+  g.save(); g.translate(ox, oy); if (o.flip) { g.translate(16*s, 0); g.scale(-1,1); }
+  const p = P(g, s); const b = o.bob;
+  p(4, 14, 8, 1, 'rgba(0,0,0,.26)');
+  p(4, 2+b, 8, 1, o.hat); p(3, 3+b, 10, 1, o.hat);   /* 帽檐 */
+  p(4, 4+b, 8, 4, o.skin);                            /* 脸 */
+  p(5, 5+b, 1, 1, o.dark); p(9, 5+b, 1, 1, o.dark);   /* 眼 */
+  p(4, 8+b, 8, 5, o.body);                            /* 身 */
+  p(6, 8+b, 3, 1, o.skin);                            /* 手 */
+  p(5, 13+b, 2, 2, o.dark); p(9, 13+b, 2, 2, o.dark); /* 腿 */
+  p(4, 9+b, 1, 3, o.dark);
+  g.restore();
+}
+
+/* ---------------- 3. 世界层 ---------------- */
+const TILE = 16, MAPW = 20, MAPH = 14;
+
+const MAPS = {
+  town: {
+    name:'微光镇',
+    rows:[
+      "TTTTTTTTTTTTTTTTTTTT",
+      "T..f....f....f....fT",
+      "T..HHHH....HHHH....T",
+      "T..HHHH....HHHH....T",
+      "T..HHHD....HHHD....T",
+      "T.....=.......=....T",
+      "T.....=========....T",
+      "T..f.....=.....f...T",
+      "T........=.........T",
+      "T...TT...=...TT....T",
+      "T...TT...=...TT....T",
+      "T........=.........T",
+      "T..f.....=.....f...T",
+      "TTTTTTTTT=TTTTTTTTTT"
+    ],
+    npcs:[
+      { x:12, y:8,  name:'镇民', hat:'#7a9e5a', body:'#6d7683',
+        lines:['最近苔原小径的草丛里，野生伙伴变多了。','草丛里走两步就会遇到它们，别被吓到。',
+               '打赢了会掉碎晶，东边摊子上的货郎收这个。'] },
+      { x:13, y:7,  name:'货郎', hat:'#a8642c', body:'#8a5a12', action:'shop',
+        lines:['来看看，都是路上用得着的东西。'] },
+      { x:10, y:11, name:'篝火守', hat:'#e8b530', body:'#a8642c',
+        lines:['篝火还温着。','坐下听一段节拍吧？'], action:'camp' },
+      { x:3,  y:8,  name:'旅人', hat:'#5b8fd0', body:'#3a4654',
+        lines:['风蚀洞窟深处有人在等一个「听得见共鸣」的人。','对了——连续用同属性的招式，能攒出共鸣。'] }
+    ],
+    warps:[ { x:9, y:13, to:'route', tx:9, ty:1 } ],
+    pickups:[
+      { x:2,  y:7,  item:'ball', n:2 },
+      { x:16, y:11, item:'shard', n:15 }
+    ],
+    enc: null
+  },
+  route: {
+    name:'苔原小径',
+    rows:[
+      "TTTTTTTTT=TTTTTTTTTT",
+      "T...,....=....,...TT",
+      "T..,,,...=...,,,...T",
+      "T..,,,...=...,,,...T",
+      "T...,....=....,...TT",
+      "T........=.........T",
+      "T..TT....=....TT...T",
+      "T..TT..,,=,,..TT...T",
+      "T......,,=,,......==",
+      "T...,....=....,....T",
+      "T..,,,...=...,,,...T",
+      "T..,,,...=...,,,...T",
+      "T...,....=....,....T",
+      "TTTTTTTTT=TTTTTTTTTT"
+    ],
+    npcs:[
+      { x:12, y:5, name:'采集者', hat:'#a8642c', body:'#6d7683',
+        lines:['小心脚下，草丛里的伙伴可凶了。','血少了就回镇上找篝火守，免费。'] },
+      { x:16, y:8, name:'摆渡人', hat:'#5fbfd6', body:'#3a4654',
+        lines:['往东一直走，就是星落湖。','湖心有块会发亮的石头，挡了好几代人了。','听说它只认「节拍」，不认力气。'] }
+    ],
+    warps:[
+      { x:9, y:0,  to:'town',  tx:9, ty:12 },
+      { x:9, y:13, to:'cave',  tx:9, ty:2 },
+      { x:19, y:8, to:'lake',  tx:1, ty:8 }
+    ],
+    pickups:[
+      { x:17, y:1,  item:'ball', n:2 },
+      { x:2,  y:10, item:'tonic', n:1 }
+    ],
+    enc: { pool:['bud','zap','gale','drop'], min:3, max:6 }
+  },
+  cave: {
+    name:'风蚀洞窟',
+    rows:[
+      "xxxxxxxxxxxxxxxxxxxx",
+      "xccccccccccccccccccx",
+      "xccxxxxccccxxxxccccx",
+      "xccxxxxccccxxxxccccx",
+      "xccccccccccccccccccx",
+      "xccccxxxxxxccccccccx",
+      "xccccxxxxxxccccccccx",
+      "xccccccccccccccxxxxx",
+      "xccxxxxccccccccccccx",
+      "xccxxxxccccccccccccx",
+      "xccccccccccccccccccx",
+      "xccccccccccccccccccx",
+      "xccccccccccccccccccx",
+      "xxxxxxxxxxxxxxxxxxxx"
+    ],
+    npcs:[
+      { x:9, y:11, name:'守塔人', hat:'#cfd6df', body:'#2b3542',
+        lines:['你来了。','让我听听，你和伙伴之间的共鸣有多响。'], action:'boss' }
+    ],
+    warps:[ { x:9, y:1, to:'route', tx:9, ty:12 } ],
+    pickups:[
+      { x:17, y:12, item:'bell', n:1 }
+    ],
+    enc: { pool:['rock','zap','gale','bud'], min:8, max:11 },
+    hidden:[
+      { x:17, y:2, item:'bell', n:1, text:'洞窟的暗角里，藏着一只没人认领的复苏铃。' },
+      { x:3,  y:10, item:'shard', n:50, text:'石缝深处，卡着一小堆碎晶（+50）。' }
+    ]
+  },
+  lake: {
+    name:'星落湖畔',
+    rows:[
+      "TTTTTTTTTTTTTTTTTTTT",
+      "TWWWWWWW~~~WWWWWWWWT",
+      "TWWWWWWWWoWWWWWWWWWT",
+      "TWWWWWWWW~WWWWWWWWWT",
+      "T~~~~~~~~~~~~~~~~~~T",
+      "T~~,,~~~~~~~~,,,~~~T",
+      "T~~,,~~~~~~~~,,,~~~T",
+      "T~~~~~~~~~~~~~~~~~~T",
+      "=~~~~~~~~~~~~~~~~~~T",
+      "T~~,,~~~~~~~~,,,~~~T",
+      "T~~,,~~~~~~~~,,,~~~T",
+      "T~~~~~~~~~~~~~~~~~~T",
+      "T~~~~~~~~~~~~~~~~~~T",
+      "TTTTTTTTTTTTTTTTTTTT"
+    ],
+    npcs:[
+      { x:10, y:1, name:'拾荒者', hat:'#cfd6df', body:'#6d7683', action:'gift',
+        lines:['你能上来，就说明那石头认你了。','湖心的风比镇上冷，拿去用吧。'] }
+    ],
+    warps:[ { x:0, y:8, to:'route', tx:18, ty:8 } ],
+    pickups:[
+      { x:8,  y:1,  item:'shard', n:40 },
+      { x:2,  y:5,  item:'ball', n:3 },
+      { x:17, y:10, item:'tonic', n:2 }
+    ],
+    enc: { pool:['drop','gale','bud','zap'], min:10, max:14 },
+    hidden:[
+      { x:18, y:13, item:'ball', n:4, text:'湖岸的芦苇里，藏着 4 个共鸣球。' }
+    ]
+  },
+  tower: {
+    name:'共鸣之塔',
+    rows:[
+      "xxxxxxxxxxxxxxxxxxxx",
+      "xccccccccccccccccccx",
+      "xccccccccccccccccccx",
+      "xccccxxxxcxxxxxccccx",
+      "xccccxccccccccxccccx",
+      "xccccxccccccccxccccx",
+      "xccccxccccccccxccccx",
+      "xccccxccccccccxccccx",
+      "xccccxccccccccxccccx",
+      "xccccxxxxcxxxxxccccx",
+      "xccccccccccccccccccx",
+      "xccccccccccccccccccx",
+      "xccccccccccccccccccx",
+      "xxxxxxxxxxxxxxxxxxxx"
+    ],
+    npcs:[
+      { x:9, y:6, name:'塔中回响', hat:'#cfd6df', body:'#5b8fd0', action:'tower', lines:[] }
+    ],
+    warps:[ { x:9, y:12, to:'cave', tx:8, ty:11 } ],
+    enc: null
+  }
+};
+
+/* ---------------- 2.5 道具 / 商店 / 图鉴奖励 ----------------
+   道具只有三种，全部有明确来源：商店买、战斗掉、地图捡、图鉴里程碑送。 */
+const ITEMS = {
+  ball : { name:'共鸣球', icon:'球', price:12, desc:'投出去捕捉野生伙伴' },
+  tonic: { name:'药水',   icon:'药', price:16, desc:'战斗中回复 22 点体力' },
+  bell : { name:'复苏铃', icon:'铃', price:60, desc:'唤醒 1 名倒下的伙伴（40% 体力）' }
+};
+const SHOPS = {
+  general: { title:'货郎的摊子', stock:['ball','tonic','bell'],
+    lines:['碎晶是这片苔原的硬通货，打赢了就有。','铃铛贵，但救命。'] }
+};
+const DEX_MILESTONES = [
+  { n:3, grant:{ ball:3 },            text:'图鉴记满 3 种——货郎托我捎来 3 个共鸣球。' },
+  { n:5, grant:{ tonic:2, shard:40 }, text:'图鉴记满 5 种——2 瓶药水、40 碎晶，收下吧。' },
+  { n:7, grant:{ bell:1, ball:5 },    text:'图鉴记满 7 种——一只复苏铃，5 个共鸣球。' }
+];
+
+/* 共鸣之塔：五层，每层一条禁制。limitTurn 为整层累计回合上限 */
+const TOWER_FLOORS = [
+  { title:'一层 · 试音', foes:[['rock',13]], limitTurn:3,
+    intro:'塔的第一声回响，藏在石砾的裂缝里。三层之内，必须分出胜负。',
+    win:'回响散开，石阶向上亮了一格。', reward:{ shard:60, ball:2 } },
+  { title:'二层 · 禁焰', foes:[['bud',14]], banType:'fire',
+    intro:'这一层的火种被封住了——火属性招式无法使用。换个属性试试。',
+    win:'藤影退开，火种的封印松了一分。', reward:{ shard:70, tonic:2 } },
+  { title:'三层 · 逐流', foes:[['drop2',16]], limitTurn:4,
+    intro:'水声在塔里绕成环。四回合内击败澜波兽，慢一拍就输了。',
+    win:'水环碎成光点，第四层的门开了。', reward:{ shard:80, ball:3 } },
+  { title:'四层 · 静默', foes:[['gale',15],['zap',15]], banType:'volt', noResonance:true,
+    intro:'这里听得见风，却听不见共鸣。电属性被封，共鸣链也无法触发。',
+    win:'静电熄灭，塔顶的轮廓近了。', reward:{ shard:100, bell:1 } },
+  { title:'五层 · 终曲', foes:[['tan2',18],['drop2',18],['bud2',18]],
+    intro:'塔顶的三重回响。它们会跟着你的节拍一起鸣响。',
+    win:'三段共鸣汇成一声长鸣，穿透了整座塔。', reward:{ shard:200, ball:5, tonic:3, bell:1 } }
+];
+
+function weatherInfo() {
+  if (!S.weather) return null;
+  return WEATHER[S.weather];
+}
+function rollWeather() {
+  /* 战斗开场随机天气（约 40% 概率触发），战斗结束清空 */
+  const r = Math.random();
+  if (r < 0.14) S.weather = 'sunny';
+  else if (r < 0.28) S.weather = 'rain';
+  else if (r < 0.4) S.weather = 'wind';
+  else S.weather = null;
+}
+function itemCount(key) {
+  return key === 'shard' ? S.shards : key === 'ball' ? S.balls
+       : key === 'tonic' ? S.tonic : key === 'bell' ? S.bell : 0;
+}
+function giveItem(key, n) {
+  if (key === 'shard') S.shards += n;
+  else if (key === 'ball') S.balls += n;
+  else if (key === 'tonic') S.tonic += n;
+  else if (key === 'bell') S.bell += n;
+}
+function bagText() { return `◈${S.shards} · 球×${S.balls} · 药×${S.tonic} · 铃×${S.bell}`; }
+
+const SOLID = new Set(['T','W','#','H','x','s','o']);
+const GRASS = ',';
+const SAND = '~';
+
+/* 随机事件：踩草丛时小概率触发（非战斗） */
+const RANDOM_EVENTS = [
+  { w:3, run: async () => {
+      await dialog('一只受伤的野生伙伴趴在路边，眼里带着水光。');
+      await dialog('你给它喝了一点药水，它感激地蹭了蹭你的手。');
+      if (Math.random() < 0.5) { giveItem('ball', 1); await dialog('临走时，它从草丛里滚出一个共鸣球送你。'); }
+      else { S.shards += 20; updateHud(); await dialog('它跑远了，留给你一小堆碎晶（+20）。'); }
+      saveGame();
+  }},
+  { w:2, run: async () => {
+      await dialog('草丛深处有一个落满灰的小箱子。');
+      const r = Math.random();
+      if (r < 0.4) { giveItem('tonic', 2); await dialog('里面是 2 瓶药水，看起来还没过期。'); }
+      else if (r < 0.7) { giveItem('ball', 2); await dialog('里面躺着 2 个共鸣球。'); }
+      else { giveItem('bell', 1); await dialog('居然是一只复苏铃！'); }
+      saveGame();
+  }},
+  { w:2, run: async () => {
+      await dialog('一个裹着斗篷的神秘商人拦住了你。');
+      if (S.shards >= 30) {
+        await dialog('「30 碎晶，换你一个复苏铃。」');
+        S.shards -= 30; giveItem('bell', 1); SFX.play('buy'); updateHud();
+        await dialog('他递来铃铛，转身消失在草丛里。');
+      } else {
+        await dialog('他看了看你的口袋，摇了摇头走开了。');
+      }
+      saveGame();
+  }}
+];
+function randomEventChance() { return 0.06; }
+
+/* 支线任务：完成给奖励，进度存 flags */
+const QUESTS = [
+  { id:'catch3', name:'货郎的委托', npc:'货郎',
+    give: { shard:80, ball:3 }, text:'「帮我多收几只伙伴吧。捕获 3 种，我就给你好处。」',
+    done: '「3 种了，够开个小铺子了。喏，拿去。」', check: () => dexCount() >= 3 },
+  { id:'grass', name:'旅人的心愿', npc:'旅人',
+    give: { tonic:3, bell:1 }, text:'「我很想看看草属性的伙伴。队伍里带上芽芽或藤冠兽，再来找我。」',
+    done: '「是它！头顶的嫩芽真精神。这些药水你收下。」', check: () => S.party.some(p => SPECIES[p.key].type === 'grass') }
+];
+function questByNpc(npc) { return QUESTS.find(q => q.npc === npc); }
+async function tryQuest(npc) {
+  const q = questByNpc(npc);
+  if (!q || S.flags['quest_' + q.id]) return false;
+  if (!q.check()) { await dialog(q.text); return true; }
+  S.flags['quest_' + q.id] = true;
+  Object.keys(q.give).forEach(k => giveItem(k, q.give[k]));
+  S.quests++;
+  SFX.play('win');
+  const rw = Object.keys(q.give).map(k => k === 'shard' ? `◈${q.give[k]}` : `${ITEMS[k].name}×${q.give[k]}`).join('、');
+  await dialog(q.done);
+  await dialog(`【支线完成】${q.name}：获得 ${rw}。`);
+  grantAchievement('quest1');
+  updateHud(); saveGame();
+  return true;
+}
+
+/* ---------------- 4. 状态 ---------------- */
+const S = {
+  mode:'title',          /* title | world | dialog | battle | timing | menu */
+  map:'town',
+  player:{ x:9, y:12, fx:9, fy:12, dir:'up', moving:false, step:0 },
+  party:[], box:[], balls:6, tonic:3, bell:1, shards:30,
+  flags:{}, dex:{}, muted:false, savedAt:0,
+  steps:0, lastBattle:0, t:0, weather:null,
+  achievements:{}, battles:0, evolutions:0, quests:0
+};
+
+/* ---------------- 4.0 BGM 合成器（WebAudio 循环旋律，无素材） ---------------- */
+const BGM = {
+  on:false, ctx:null, master:null, timer:0, step:0, seq:null, tempo:0,
+  TRACKS: {
+    explore: { bpm:112, seq:[523,0,659,523,784,0,659,0, 523,0,659,523,784,659,523,0],
+               bass:[130,0,130,0,164,0,130,0, 130,0,130,0,164,130,98,0], wave:'triangle' },
+    battle : { bpm:150, seq:[392,392,0,392,0,311,0,466, 392,0,311,0,466,0,311,0],
+               bass:[98,98,0,98,0,78,0,116, 98,0,78,0,116,0,78,0], wave:'square' },
+    camp   : { bpm:88,  seq:[392,0,494,0,587,494,0,0, 440,0,523,0,659,587,0,0],
+               bass:[98,0,123,0,146,123,0,0, 110,0,130,0,164,146,0,0], wave:'triangle' }
+  },
+  init() {
+    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    try {
+      this.ctx = new AC();
+      this.master = this.ctx.createGain();
+      this.master.gain.value = 0.05;
+      this.master.connect(this.ctx.destination);
+    } catch (e) { this.ctx = null; }
+  },
+  note(freq, t, dur, wave) {
+    if (!freq) return;
+    const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = wave || 'square';
+    o.frequency.value = freq;
+    const vol = (wave === 'triangle' ? 0.5 : 0.35);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(this.master);
+    o.start(t); o.stop(t + dur + 0.02);
+  },
+  start(track) {
+    this.init();
+    if (!this.ctx || this.on || S.muted) return;
+    const tk = this.TRACKS[track] || this.TRACKS.explore;
+    this.seq = tk; this.step = 0; this.on = true;
+    this.tempo = 60 / tk.bpm;
+    const stepDur = this.tempo / 2;
+    const tick = () => {
+      if (!this.on) return;
+      const i = this.step % this.seq.seq.length;
+      const t = this.ctx.currentTime;
+      const mel = this.seq.seq[i], ba = this.seq.bass[i];
+      this.note(mel, t, stepDur * 0.9, tk.wave);
+      this.note(ba, t, stepDur * 0.9, 'sine');
+      this.step++;
+      this.timer = setTimeout(tick, stepDur * 1000);
+    };
+    tick();
+  },
+  switch(track) {
+    if (!this.on) return;
+    const tk = this.TRACKS[track] || this.TRACKS.explore;
+    if (this.seq === tk) return;
+    this.seq = tk; this.step = 0; this.tempo = 60 / tk.bpm;
+  },
+  stop() {
+    this.on = false;
+    if (this.timer) { clearTimeout(this.timer); this.timer = 0; }
+  }
+};
+
+/* ---------------- 4.1 8-bit 音效（WebAudio 方波合成，无素材） ---------------- */
+const SFX = {
+  ctx:null, master:null,
+  init() {
+    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    try {
+      this.ctx = new AC();
+      this.master = this.ctx.createGain();
+      this.master.gain.value = 0.16;
+      this.master.connect(this.ctx.destination);
+    } catch (e) { this.ctx = null; }
+  },
+  tone(freq, dur, opt) {
+    if (S.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    opt = opt || {};
+    const t0 = this.ctx.currentTime + (opt.delay || 0);
+    const o = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    o.type = opt.type || 'square';
+    o.frequency.setValueAtTime(freq, t0);
+    if (opt.to) o.frequency.exponentialRampToValueAtTime(Math.max(40, opt.to), t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(opt.vol || 0.7, t0 + 0.014);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(this.master);
+    o.start(t0); o.stop(t0 + dur + 0.03);
+  },
+  seq(list, dur, gap, opt) {
+    list.forEach((f, i) => this.tone(f, dur || 0.09, Object.assign({ delay: i * (gap || 0.085) }, opt || {})));
+  },
+  play(name) {
+    if (S.muted) return;
+    switch (name) {
+      case 'ui':     this.tone(660, 0.05, { vol:.45 }); break;
+      case 'open':   this.seq([520, 700], .07, .06); break;
+      case 'enc':    this.seq([330, 262, 392, 330], .11, .1, { type:'square', vol:.6 }); break;
+      case 'hit':    this.tone(180, 0.11, { type:'square', vol:.55, to:90 }); break;
+      case 'crit':   this.seq([880, 1180], .07, .06, { vol:.7 }); break;
+      case 'reson':  this.seq([523, 659, 784, 1047], .08, .07, { vol:.65 }); break;
+      case 'faint':  this.tone(260, 0.42, { type:'triangle', vol:.6, to:70 }); break;
+      case 'win':    this.seq([523, 659, 784, 1047], .1, .09); break;
+      case 'level':  this.seq([659, 784, 988, 1319], .09, .085); break;
+      case 'catch':  this.seq([784, 988, 1175, 1568], .1, .1); break;
+      case 'run':    this.seq([392, 330, 262], .07, .06); break;
+      case 'perfect':this.seq([1047, 1568], .07, .05, { vol:.75 }); break;
+      case 'good':   this.tone(880, 0.08, { vol:.6 }); break;
+      case 'ok':     this.tone(660, 0.07, { vol:.5 }); break;
+      case 'miss':   this.tone(196, 0.16, { type:'sawtooth', vol:.5, to:120 }); break;
+      case 'heal':   this.seq([523, 659, 784], .09, .08); break;
+      case 'tick':   this.tone(392, 0.035, { vol:.28 }); break;
+      case 'save':   this.seq([784, 1047], .08, .07); break;
+      case 'stone':  this.tone(120, 0.5, { type:'sawtooth', vol:.7, to:60 }); break;
+      case 'pick':   this.seq([784, 988, 1319], .07, .06, { vol:.6 }); break;
+      case 'buy':    this.seq([880, 1175], .06, .05, { vol:.55 }); break;
+      case 'coin':   this.tone(1047, 0.06, { vol:.4 }); break;
+    }
+  }
+};
+
+/* ---------------- 4.2 图鉴 / 存档 ---------------- */
+const SAVE_KEY = 'pixel-tamer.v1';
+
+/* 成就：达成即提示，一次性 */
+const ACHIEVEMENTS = [
+  { id:'first', name:'初次共鸣', desc:'完成第一场战斗', check: st => st.battles >= 1 },
+  { id:'hunt10', name:'猎手', desc:'累计战斗 10 场', check: st => st.battles >= 10 },
+  { id:'catch3', name:'收藏家', desc:'捕获 3 种伙伴', check: () => dexCount() >= 3 },
+  { id:'catchall', name:'生态学家', desc:'图鉴集齐全部伙伴', check: () => dexCount() >= dexTotal() },
+  { id:'tower', name:'塔顶之音', desc:'通关共鸣之塔', check: st => !!st.flags.towerClear },
+  { id:'bond', name:'心意相通', desc:'任意伙伴羁绊达到 100', check: () => S.party.some(p => p.bond >= 100) },
+  { id:'evolve', name:'破茧', desc:'见证一次进化', check: st => st.evolutions >= 1 },
+  { id:'quest1', name:'热心肠', desc:'完成一件支线委托', check: st => st.quests >= 1 }
+];
+function grantAchievement(id) {
+  const a = ACHIEVEMENTS.find(x => x.id === id);
+  if (!a || S.achievements[id]) return false;
+  S.achievements[id] = true;
+  SFX.play('win');
+  dialog('★ 成就达成：' + a.name + ' —— ' + a.desc).catch(() => {});
+  saveGame();
+  return true;
+}
+function checkAchievements() {
+  ACHIEVEMENTS.forEach(a => { if (a.check(S)) grantAchievement(a.id); });
+}
+function dexSee(key) {
+  if (!key || !SPECIES[key]) return;
+  if (!S.dex[key]) S.dex[key] = { seen:true, caught:false };
+  else S.dex[key].seen = true;
+}
+function dexCatch(key) { dexSee(key); S.dex[key].caught = true; }
+function dexCount() { return Object.keys(S.dex).filter(k => S.dex[k].caught).length; }
+function dexTotal() { return Object.keys(SPECIES).length; }
+/* 每捕获 1 种：捕捉率 +4%，篝火回复上限 +2% */
+function dexCatchBonus() { return 1 + 0.04 * dexCount(); }
+
+/* 习性洞察：捕获某族后解锁具体被动（取已捕获族里的最优效果） */
+const DEX_PASSIVES = [
+  { key:'bud',  name:'藤蔓庇护', desc:'野外遇敌率 −20%', eff:'enc-20' },
+  { key:'zap',  name:'静电感应', desc:'逃跑必定成功',    eff:'run-ok' },
+  { key:'gale', name:'顺风而行', desc:'捕捉率 +8%',      eff:'catch+8' },
+  { key:'rock', name:'岩皮共鸣', desc:'篝火回复上限 +4%', eff:'camp+4' },
+  { key:'drop', name:'潮汐节律', desc:'战斗碎晶掉落 +30%', eff:'shard+30' },
+  { key:'tan',  name:'炉火羁绊', desc:'升级所需经验 −10%', eff:'exp-10' }
+];
+function hasPassive(key) { return !!(S.dex[key] && S.dex[key].caught); }
+function passiveEncRate() { return hasPassive('bud') ? 0.8 : 1; }
+function passiveRunOk() { return hasPassive('zap'); }
+function passiveCatchBonus() { return 1 + (hasPassive('gale') ? 0.08 : 0); }
+function passiveCampBonus() { return hasPassive('rock') ? 0.04 : 0; }
+function passiveShardBonus() { return hasPassive('drop') ? 1.3 : 1; }
+function passiveExpReq() { return hasPassive('tan') ? 0.9 : 1; }
+function needExp(lv) { return Math.round((lv * 13 + 18) * passiveExpReq()); }
+
+function saveGame() {
+  if (!S.party || !S.party.length) return false;
+  try {
+    const data = {
+      v:1, map:S.map,
+      player:{ x:S.player.x, y:S.player.y, dir:S.player.dir },
+      party:S.party, box:S.box, balls:S.balls, tonic:S.tonic, bell:S.bell, shards:S.shards,
+      flags:S.flags, dex:S.dex, muted:S.muted, at:Date.now(),
+      achievements:S.achievements, battles:S.battles, evolutions:S.evolutions, quests:S.quests
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    S.savedAt = data.at;
+    return true;
+  } catch (e) { return false; }
+}
+function readSave() {
+  try { const r = localStorage.getItem(SAVE_KEY); return r ? JSON.parse(r) : null; }
+  catch (e) { return null; }
+}
+function loadGame() {
+  const d = readSave();
+  if (!d || !d.party || !d.party.length) return false;
+  S.map = d.map || 'town';
+  S.party = d.party; S.box = d.box || [];
+  migrateParty(S.party); migrateParty(S.box);
+  S.balls = (d.balls == null) ? 6 : d.balls;
+  S.tonic = (d.tonic == null) ? 3 : d.tonic;
+  S.bell   = (d.bell == null) ? 1 : d.bell;
+  S.shards = (d.shards == null) ? 0 : d.shards;
+  S.flags = d.flags || {}; S.dex = d.dex || {};
+  S.muted = !!d.muted;
+  S.achievements = d.achievements || {};
+  S.battles = d.battles || 0; S.evolutions = d.evolutions || 0; S.quests = d.quests || 0;
+  const p = d.player || { x:9, y:10, dir:'down' };
+  S.player.x = p.x; S.player.y = p.y;
+  S.player.fx = p.x; S.player.fy = p.y;
+  S.player.dir = p.dir || 'down'; S.player.moving = false;
+  S.mode = 'world';
+  $('#title').classList.add('hidden');
+  applyMute(); updateHud();
+  SFX.play('open');
+  return true;
+}
+function migrateParty(arr) {
+  (arr || []).forEach(m => {
+    if (m.trait === undefined) m.trait = null;
+    if (m.status === undefined) m.status = null;
+  });
+}
+function applyMute() {
+  const b = $('#btnMute');
+  if (!b) return;
+  b.classList.toggle('off', S.muted);
+  b.textContent = S.muted ? '×' : '♪';
+  b.title = S.muted ? '音效：关' : '音效：开';
+  b.style.opacity = S.muted ? .45 : 1;
+}
+
+/* ---------------- 5. 地图绘制 ---------------- */
+const cv = $('#world'), ctx = cv.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+function h2(x, y) { const v = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return v - Math.floor(v); }
+function box(x, y, w, h, c) { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); }
+
+function drawTile(ch, tx, ty, t) {
+  const x = tx * TILE, y = ty * TILE, r = h2(tx, ty);
+  switch (ch) {
+    case '.': case ',': case 'f': case '=': case 'D': {
+      /* 草底 */
+      box(x, y, 16, 16, '#7ec46b');
+      if (r > .55) box(x + 3 + (r * 8 | 0), y + 4 + (r * 7 | 0), 2, 1, '#6cb35c');
+      if (r > .82) box(x + 9, y + 11, 1, 1, '#95d382');
+      if (ch === ',') {
+        box(x, y, 16, 16, '#5aa452');
+        for (let i = 0; i < 3; i++) {
+          const bx = x + 2 + i * 5, by = y + 6 + ((r * 3 + i) % 3);
+          box(bx, by, 1, 5, '#3f8a46'); box(bx + 1, by + 1, 1, 4, '#4b9b52');
+          box(bx, by - 1, 1, 1, '#79c47c');
+        }
+      }
+      if (ch === 'f') {
+        box(x + 5, y + 5, 2, 2, '#f7f8fa'); box(x + 6, y + 6, 1, 1, '#e8b530');
+        box(x + 10, y + 9, 2, 2, '#e0603a'); box(x + 10, y + 10, 1, 1, '#ffd08a');
+      }
+      if (ch === '=') {
+        box(x, y, 16, 16, '#e0cba2');
+        if (r > .5) box(x + 3, y + 6, 2, 1, '#cbb287');
+        if (r > .78) box(x + 10, y + 11, 2, 1, '#cbb287');
+        box(x, y, 16, 1, '#d3bb90');
+      }
+      if (ch === 'D') {
+        box(x, y, 16, 16, '#f0e2c6');
+        box(x + 3, y + 2, 10, 14, '#3a2a1e');
+        box(x + 4, y + 3, 8, 13, '#5b422e');
+        box(x + 10, y + 8, 1, 2, '#e8b530');
+      }
+      break;
+    }
+    case 'T': {
+      box(x, y, 16, 16, '#7ec46b');
+      box(x + 7, y + 11, 2, 5, '#6b4a2a');
+      box(x + 2, y + 2, 12, 2, '#245c34');
+      box(x + 1, y + 4, 14, 6, '#2f7a44');
+      box(x + 3, y + 1, 10, 1, '#2f7a44');
+      box(x + 3, y + 3, 4, 1, '#4b9b52');
+      box(x + 11, y + 6, 3, 2, '#245c34');
+      box(x + 4, y + 10, 8, 1, '#245c34');
+      break;
+    }
+    case 'W': {
+      box(x, y, 16, 16, '#3f7fd0');
+      const ph = Math.sin(t / 460 + tx * .7 + ty * .5);
+      box(x, y + 4 + (ph > 0 ? 0 : 1), 5, 1, '#6fb3e8');
+      box(x + 8, y + 9 - (ph > 0 ? 1 : 0), 6, 1, '#6fb3e8');
+      box(x + 2, y + 12, 4, 1, '#2f66ad');
+      break;
+    }
+    case 'H': {
+      box(x, y, 16, 16, '#f0e2c6');
+      box(x, y, 16, 1, '#c9b592');
+      box(x + 2, y + 4, 12, 2, '#c8574a');   /* 木梁 */
+      box(x + 2, y + 11, 12, 2, '#c8574a');
+      box(x, y + 7, 2, 1, '#c8574a');
+      box(x + 6, y + 2, 4, 5, '#8fbfd8');    /* 窗 */
+      box(x + 7, y + 2, 1, 5, '#c9b592');
+      box(x + 6, y + 4, 4, 1, '#c9b592');
+      break;
+    }
+    case '#': case 'x': {
+      box(x, y, 16, 16, '#3b3630');
+      box(x + 1, y + 1, 14, 13, '#544c42');
+      box(x + 2, y + 2, 6, 3, '#6b6155');
+      box(x + 9, y + 6, 5, 4, '#6b6155');
+      box(x + 3, y + 9, 4, 3, '#463f36');
+      box(x + 1, y + 13, 14, 1, '#2b2722');
+      break;
+    }
+    case '~': {
+      box(x, y, 16, 16, '#e8d8b0');
+      if (r > .48) box(x + 3, y + 5, 2, 1, '#d6c49a');
+      if (r > .76) box(x + 10, y + 10, 2, 1, '#f2e5c4');
+      box(x, y + 15, 16, 1, '#d6c49a');
+      break;
+    }
+    case 'o': {
+      /* 共鸣石：会呼吸的青色纹路 */
+      box(x, y, 16, 16, '#e8d8b0');
+      box(x + 1, y + 1, 14, 14, '#3b3630');
+      box(x + 2, y + 2, 12, 12, '#6b6155');
+      box(x + 3, y + 3, 10, 3, '#7d7264');
+      const ph = Math.sin(t / 380 + tx * 1.7) * .5 + .5;
+      box(x + 6, y + 5, 4, 1, ph > .45 ? '#7fe6d0' : '#3f9c8c');
+      box(x + 7, y + 6, 2, 4, ph > .45 ? '#a8f5e6' : '#4fb8a8');
+      box(x + 5, y + 10, 6, 1, '#3f9c8c');
+      box(x + 2, y + 2, 2, 1, '#8e8577');
+      break;
+    }
+    case 'c': {
+      box(x, y, 16, 16, '#6f6659');
+      if (r > .4) box(x + 3, y + 5, 2, 2, '#5e564a');
+      if (r > .7) box(x + 10, y + 10, 2, 1, '#827a6b');
+      box(x, y + 15, 16, 1, '#5a5248');
+      break;
+    }
+    case 's': {
+      box(x, y, 16, 16, '#7ec46b');
+      box(x + 7, y + 8, 2, 6, '#6b4a2a');
+      box(x + 2, y + 2, 12, 7, '#c9a06a');
+      box(x + 3, y + 3, 10, 5, '#e0cba2');
+      box(x + 4, y + 5, 6, 1, '#a8845a');
+      break;
+    }
+    default: box(x, y, 16, 16, '#7ec46b');
+  }
+}
+
+function drawPlayerAt(t) {
+  const p = S.player;
+  const walking = p.moving;
+  const bob = walking ? (Math.floor(t / 110) % 2 === 0 ? 0 : 1) : 0;
+  const flip = p.dir === 'left';
+  drawHuman(ctx, Math.round(p.fx * 16), Math.round(p.fy * 16) - bob, 1,
+    { hat:'#e0603a', body:'#4a6fa5', flip });
+}
+
+/* 地上的小布包：一次性拾取点 */
+function pickKey(pk) { return 'pick_' + S.map + '_' + pk.x + '_' + pk.y; }
+function pickTaken(pk) { return !!S.flags[pickKey(pk)]; }
+function pickupAt(x, y) {
+  return (MAPS[S.map].pickups || []).find(pk => pk.x === x && pk.y === y && !pickTaken(pk)) || null;
+}
+/* 隐藏拾取：看不见、不可碰撞，踩到即触发（一次性） */
+function hiddenAt(x, y) {
+  return (MAPS[S.map].hidden || []).find(h => h.x === x && h.y === y && !S.flags[pickKey(h)]) || null;
+}
+async function collectHidden(h) {
+  S.flags[pickKey(h)] = true;
+  SFX.play('pick');
+  giveItem(h.item, h.n);
+  updateHud();
+  await dialog(h.text);
+  saveGame();
+}
+function drawSparkle(tx, ty, t) {
+  const cx = tx * 16 + 8, cy = ty * 16 + 8;
+  const ph = (Math.sin(t / 300) + 1) / 2;
+  const r = 2 + Math.round(ph * 2);
+  box(cx - 4, cy + 5, 8, 1, 'rgba(0,0,0,.14)');
+  ctx.globalAlpha = .14 + ph * .2;
+  box(cx - 4, cy - 4, 8, 8, '#ffe9a8');
+  ctx.globalAlpha = 1;
+  box(cx - 1, cy - r, 2, r * 2, '#fff6cf');
+  box(cx - r, cy - 1, r * 2, 2, '#fff6cf');
+  box(cx - 1, cy - 1, 2, 2, '#ffffff');
+  box(cx - 1, cy + r - 1, 2, 1, '#e8b530');
+  box(cx - 1, cy - r, 2, 1, '#e8b530');
+}
+async function collectPickup(pk) {
+  S.flags[pickKey(pk)] = true;
+  giveItem(pk.item, pk.n);
+  SFX.play('pick');
+  const nm = pk.item === 'shard'
+    ? `${pk.n} 碎晶`
+    : `${ITEMS[pk.item].name} ×${pk.n}`;
+  updateHud();
+  await dialog(`地上的小布包里装着 ${nm}。`);
+  saveGame();
+}
+
+function renderWorld(t) {
+  const map = MAPS[S.map];
+  for (let y = 0; y < MAPH; y++) {
+    for (let x = 0; x < MAPW; x++) drawTile(tileAt(x, y), x, y, t);
+  }
+  (map.pickups || []).forEach(pk => { if (!pickTaken(pk)) drawSparkle(pk.x, pk.y, t); });
+  (map.npcs || []).forEach(n => {
+    const bob = Math.floor(t / 420 + n.x) % 2 === 0 ? 0 : 1;
+    drawHuman(ctx, n.x * 16, n.y * 16 + bob, 1, { hat:n.hat, body:n.body, flip:false });
+  });
+  drawPlayerAt(t);
+}
+
+/* ---------------- 6. 移动 / 交互 ---------------- */
+const keys = new Set();
+function normKey(k) {
+  const m = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right',
+              w:'up', s:'down', a:'left', d:'right', W:'up', S:'down', A:'left', D:'right' };
+  return m[k] || null;
+}
+/* 取实际地形：共鸣石破除后视作沙地 */
+function tileAt(x, y) {
+  if (x < 0 || y < 0 || x >= MAPW || y >= MAPH) return 'T';
+  const row = (MAPS[S.map].rows[y] || '');
+  let ch = row[x] || 'T';
+  if (ch === 'o' && S.flags.stoneBroken) ch = SAND;
+  return ch;
+}
+function walkable(x, y) {
+  if (x < 0 || y < 0 || x >= MAPW || y >= MAPH) return false;
+  if (SOLID.has(tileAt(x, y))) return false;
+  if ((MAPS[S.map].npcs || []).some(n => n.x === x && n.y === y)) return false;
+  return true;
+}
+function tryMove(dir) {
+  const p = S.player; p.dir = dir;
+  const d = { up:[0,-1], down:[0,1], left:[-1,0], right:[1,0] }[dir];
+  const nx = p.x + d[0], ny = p.y + d[1];
+  if (walkable(nx, ny)) { p.x = nx; p.y = ny; p.moving = true; }
+}
+
+function travel(to, tx, ty) {
+  S.map = to; const p = S.player;
+  p.x = tx; p.y = ty; p.fx = tx; p.fy = ty; p.moving = false;
+  updateHud();
+  saveGame();
+}
+
+function onArrive() {
+  S.steps++; S.lastBattle++;
+  const p = S.player;
+  const map = MAPS[S.map];
+  const w = (map.warps || []).find(w => w.x === p.x && w.y === p.y);
+  if (w) { travel(w.to, w.tx, w.ty); return; }
+  const pk = pickupAt(p.x, p.y);
+  if (pk) { collectPickup(pk); return; }
+  const hd = hiddenAt(p.x, p.y);
+  if (hd) { collectHidden(hd); return; }
+  if (map.enc && tileAt(p.x, p.y) === GRASS && S.lastBattle > 3) {
+    const r = Math.random();
+    if (r < randomEventChance() * passiveEncRate()) {
+      /* 随机事件，不计入遇敌冷却 */
+      pickOne(RANDOM_EVENTS).run();
+      return;
+    }
+    if (r < (0.24 + randomEventChance()) * passiveEncRate()) {
+      S.lastBattle = 0;
+      const lv = map.enc.min + rnd(map.enc.max - map.enc.min + 1);
+      startBattle(newMon(pickOne(map.enc.pool), lv), {});
+    }
+  }
+}
+
+/* ---------------- 7. 对话 ---------------- */
+let dlgRes = null;
+function dialog(text) {
+  S.mode = 'dialog';
+  const el = $('#dialog');
+  el.innerHTML = text + '<div class="tip">空格 / A 键 继续</div>';
+  el.classList.remove('hidden');
+  return new Promise(res => { dlgRes = res; });
+}
+function advanceDialog() {
+  if (!dlgRes) return;
+  $('#dialog').classList.add('hidden');
+  S.mode = 'world';
+  const r = dlgRes; dlgRes = null; r();
+}
+
+async function talkNpc(npc) {
+  for (const line of npc.lines) await dialog(line);
+  if (await tryQuest(npc.name)) return;
+  if (npc.action === 'camp') { await campfire(); }
+  if (npc.action === 'shop') { await openShop('general'); }
+  if (npc.action === 'gift') {
+    if (S.flags.gift) { await dialog('东西不多啦。省着点用。'); return; }
+    S.flags.gift = true;
+    S.balls += 3; S.tonic += 2;
+    SFX.play('win');
+    await dialog('给你三个共鸣球、两瓶药水。湖心的东西，值得多试几次。');
+    saveGame();
+  }
+  if (npc.action === 'boss') {
+    if (S.flags.bossWin) {
+      await dialog('守塔人侧过身，身后是一段向上的石阶。');
+      travel('tower', 9, 12);
+      return;
+    }
+    const team = [newMon('rock', 13), newMon('gale', 14)];
+    await startBattle(team[0], { trainer:npc.name, queue:team.slice(1) });
+  }
+  if (npc.action === 'tower') { await towerChallenge(); }
+}
+
+/* ---------------- 7b. 共鸣之塔流程 ---------------- */
+function towerFloor() { return clamp(S.flags.towerFloor || 1, 1, TOWER_FLOORS.length); }
+async function towerChallenge() {
+  const f = towerFloor(), cfg = TOWER_FLOORS[f - 1];
+  const guard = ['回响·一','回响·二','回响·三','回响·四','终曲'][f - 1];
+  if (S.flags.towerClear) await dialog('共鸣之塔已经记住了你。石阶重新亮起——可以从第一层再来一遍。');
+  await dialog(`【${cfg.title}】`);
+  await dialog(cfg.intro);
+  if (cfg.banType) await dialog(`本层禁制：${TYPE_NAME[cfg.banType]}属性招式无法使用。`);
+  if (cfg.noResonance) await dialog('本层禁制：共鸣链被封印，无法触发共鸣技。');
+  if (cfg.limitTurn) await dialog(`本层规则：${cfg.limitTurn} 回合内取胜。`);
+  const foes = cfg.foes.map(([k, lv]) => newMon(k, lv));
+  await startBattle(foes[0], {
+    trainer:guard, queue:foes.slice(1), tag:'tower', floor:f,
+    limitTurn:cfg.limitTurn || 0, banType:cfg.banType || null, noResonance:!!cfg.noResonance
+  });
+}
+async function towerWin() {
+  const f = BT.floor, cfg = TOWER_FLOORS[f - 1];
+  SFX.play('win');
+  await msg(cfg.win);
+  Object.keys(cfg.reward).forEach(k => giveItem(k, cfg.reward[k]));
+  SFX.play('coin');
+  const rw = Object.keys(cfg.reward).map(k =>
+    k === 'shard' ? `◈${cfg.reward[k]}` : `${ITEMS[k].name}×${cfg.reward[k]}`).join('、');
+  await msg(`塔层奖励：${rw}`);
+  updateHud();
+  if (f >= TOWER_FLOORS.length) {
+    S.flags.towerClear = true;
+    S.flags.towerFloor = 1;
+    endBattle();
+    await dialog('塔顶的风忽然静了。五段回响在你和伙伴之间合成一条线。');
+    await dialog('—— 共鸣之塔，通关。你的名字被写进了石阶。');
+    travel('town', 9, 10);
+    await dialog('回到微光镇时，篝火的火苗比平时亮了一点。');
+  } else {
+    S.flags.towerFloor = f + 1;
+    endBattle();
+    await dialog(`第 ${f + 1} 层的石阶亮了。回到塔心的回响处继续。`);
+  }
+  saveGame();
+}
+async function towerFail() {
+  SFX.play('miss');
+  await msg('回响断了……');
+  await msg('石阶把你送回了塔外。禁制还在，那一层可以重来。');
+  endBattle();
+  travel('town', 9, 10);
+  S.mode = 'world';
+  await dialog('你在塔外的石阶上醒来。伙伴们被篝火守照顾过，没有大碍。');
+  saveGame();
+}
+
+/* 共鸣石：唯一需要「节拍」才能通过的世界障碍 */
+async function breakStone() {
+  await dialog('一块共鸣石。石面的纹路在微微发亮——它不认力气，只认节拍。');
+  const j = await timingGame(3, 0.86, 26, '共鸣石 · 三次心跳');
+  const hits = j.filter(x => x !== 'miss').length;
+  if (hits >= 2) {
+    S.flags.stoneBroken = true;
+    SFX.play('stone');
+    await dialog('石头应声裂开，碎屑沉进湖里。北边露出一条窄桥。');
+    saveGame();
+  } else {
+    SFX.play('miss');
+    await dialog('纹路暗了下去。也许该换一段更稳的节拍再来。');
+  }
+}
+
+function interact() {
+  if (S.mode !== 'world') return;
+  const p = S.player;
+  const d = { up:[0,-1], down:[0,1], left:[-1,0], right:[1,0] }[p.dir] || [0,1];
+  const nx = p.x + d[0], ny = p.y + d[1];
+  const npc = (MAPS[S.map].npcs || []).find(n => n.x === nx && n.y === ny);
+  if (npc) { SFX.play('ui'); talkNpc(npc); return; }
+  const pk = pickupAt(nx, ny) || pickupAt(p.x, p.y);
+  if (pk) { SFX.play('ui'); collectPickup(pk); return; }
+  if (tileAt(nx, ny) === 'o' && !S.flags.stoneBroken) { breakStone(); return; }
+  SFX.play('ui');
+}
+
+/* ---------------- 8. 养成 ---------------- */
+function traitOf(m) { return m.trait ? TRAITS[m.trait] : null; }
+function effStats(m, weather) {
+  /* 返回受词条 + 状态 + 天气影响后的有效攻防速 */
+  const t = traitOf(m);
+  const st = m.status ? STATUS[m.status] : null;
+  let atk = m.stats.atk, def = m.stats.def, spd = m.stats.spd;
+  if (t) { atk *= (t.atkMul || 1); def *= (t.defMul || 1); spd *= (t.spdMul || 1); }
+  if (st) {
+    if (st.atkMul) atk *= st.atkMul;
+    if (st.defMul) def *= st.defMul;
+    if (st.spdMul) spd *= st.spdMul;
+  }
+  if (weather && weather.spdBoost) spd *= (1 + weather.spdBoost);
+  return { atk: Math.round(atk), def: Math.round(def), spd: Math.round(spd) };
+}
+function recalc(m) {
+  const b = SPECIES[m.key].base;
+  const old = m.maxhp || 0;
+  let hpMul = 1;
+  const t = traitOf(m); if (t && t.hpMul) hpMul *= t.hpMul;
+  m.maxhp = Math.floor((Math.floor(b.hp * 2 * m.level / 100) + m.level + 10) * hpMul);
+  m.stats = {
+    atk: Math.floor(b.atk * 2 * m.level / 100) + 5,
+    def: Math.floor(b.def * 2 * m.level / 100) + 5,
+    spd: Math.floor(b.spd * 2 * m.level / 100) + 5
+  };
+  if (m.hp != null) m.hp = Math.min(m.maxhp, m.hp + Math.max(0, m.maxhp - old));
+}
+function rollTrait(key) {
+  /* 随机词条：同种怪不再完全一致。进化形态词条池略强。 */
+  const sp = SPECIES[key];
+  const pool = sp.evolved
+    ? [ { id:'swift', name:'迅捷', atkMul:1.1, spdMul:1.2 },
+        { id:'stout', name:'坚毅', defMul:1.2, hpMul:1.05 },
+        { id:'feral', name:'凶猛', atkMul:1.25 },
+        { id:'vital', name:'活力', hpMul:1.15 } ]
+    : [ { id:'swift', name:'迅捷', spdMul:1.15 },
+        { id:'stout', name:'坚毅', defMul:1.15 },
+        { id:'vital', name:'活力', hpMul:1.1 },
+        { id:'lucky', name:'幸运', critBonus:0.15 } ];
+  const r = Math.random();
+  if (r < 0.4) return pool[rnd(pool.length)];   /* 40% 带词条 */
+  return null;
+}
+function newMon(key, level, forceTrait) {
+  const sp = SPECIES[key];
+  const trait = forceTrait !== undefined ? forceTrait : rollTrait(key);
+  const m = { key, name:sp.name, level, exp:0, bond:20, hp:null, maxhp:0, stats:null,
+              moves:[], trait: trait ? trait.id : null, status:null };
+  recalc(m); m.hp = m.maxhp;
+  const learned = sp.learn.filter(l => l[0] <= level);
+  m.moves = learned.slice(-4).map(l => ({ id:l[1], pp:MOVES[l[1]].pp }));
+  if (!m.moves.length) m.moves = [{ id:'tackle', pp:30 }];
+  return m;
+}
+const TRAITS = {
+  swift: { name:'迅捷', atkMul:1.1, spdMul:1.2 },
+  stout: { name:'坚毅', defMul:1.2, hpMul:1.05 },
+  feral: { name:'凶猛', atkMul:1.25 },
+  vital: { name:'活力', hpMul:1.15 },
+  lucky: { name:'幸运', critBonus:0.15 }
+};
+
+/* ---------------- 9. 战斗 ---------------- */
+let BT = null;
+const ui = {
+  pName:$('#pName'), pLv:$('#pLv'), pHp:$('#pHp'), pHpWrap:$('#pHpWrap'), pXp:$('#pXp'),
+  pType:$('#pType'), pPips:$('#pPips'), pSprite:$('#pSprite'),
+  eName:$('#eName'), eLv:$('#eLv'), eHp:$('#eHp'), eHpWrap:$('#eHpWrap'),
+  eType:$('#eType'), ePips:$('#ePips'), eSprite:$('#eSprite'), bMsg:$('#bMsg')
+};
+function msg(t) { ui.bMsg.textContent = t; return wait(640); }
+function hitFx(el) {
+  el.style.transition = 'none'; el.style.filter = 'brightness(2.6) saturate(.4)';
+  requestAnimationFrame(() => { el.style.transition = 'filter .3s'; el.style.filter = ''; });
+}
+function shakeScreen() {
+  const sc = $('.screen');
+  sc.classList.remove('shake');
+  void sc.offsetWidth;
+  sc.classList.add('shake');
+}
+function floatyDamage(el, dmg, crit) {
+  /* 在目标精灵上方飘出伤害数字 */
+  const layer = $('#floatyLayer');
+  const f = document.createElement('div');
+  f.className = 'floaty';
+  f.textContent = '-' + dmg;
+  f.style.fontSize = (crit ? 20 : 15) + 'px';
+  f.style.color = crit ? '#ffd76a' : '#fff';
+  const rect = el.getBoundingClientRect();
+  const lrect = layer.getBoundingClientRect();
+  f.style.left = (rect.left - lrect.left + rect.width / 2 - 18) + 'px';
+  f.style.top = (rect.top - lrect.top - 6) + 'px';
+  layer.appendChild(f);
+  requestAnimationFrame(() => {
+    f.classList.add('show');
+    f.style.transform = 'translateY(-26px)';
+  });
+  setTimeout(() => { if (f.parentNode) f.parentNode.removeChild(f); }, 750);
+}
+function spriteInto(canvas, key, flip) {
+  const g = canvas.getContext('2d');
+  g.imageSmoothingEnabled = false;
+  g.clearRect(0, 0, canvas.width, canvas.height);
+  drawMon(g, key, 8, 8, 6, flip);
+}
+function renderWeather() {
+  const wb = $('#weatherBar');
+  const w = weatherInfo();
+  if (w) {
+    wb.textContent = '☀ ' + w.name;
+    wb.className = S.weather;
+    wb.classList.remove('hidden');
+  } else {
+    wb.classList.add('hidden');
+  }
+}
+function renderBattle() {
+  if (!BT) return;
+  const m = BT.mine, e = BT.enemy;
+  renderWeather();
+  ui.pName.textContent = m.name; ui.pLv.textContent = 'Lv.' + m.level;
+  ui.pHp.style.width = (m.hp / m.maxhp * 100).toFixed(1) + '%';
+  ui.pHpWrap.classList.toggle('low', m.hp / m.maxhp < .3);
+  ui.pXp.style.width = clamp(m.exp / needExp(m.level) * 100, 0, 100) + '%';
+  ui.pType.textContent = TYPE_NAME[SPECIES[m.key].type];
+  ui.pType.style.background = TYPE_COLOR[SPECIES[m.key].type];
+  const mSt = m.status ? STATUS[m.status] : null;
+  const mTrait = traitOf(m);
+  ui.pType.innerHTML = TYPE_NAME[SPECIES[m.key].type] +
+    (mTrait ? `<span class="status-tag" style="background:#8d6fe0">${mTrait.name}</span>` : '') +
+    (mSt ? `<span class="status-tag" style="background:${mSt.color}">${mSt.name}</span>` : '');
+  const need = m.bond >= 60 ? 2 : 3;
+  const chain = BT.noResonance ? 0 : BT.chain;
+  ui.pPips.innerHTML = [0,1,2].map(i =>
+    `<b class="${i < Math.min(chain, need) ? 'on' : ''}"></b>`).join('');
+
+  ui.eName.textContent = (BT.trainer ? '' : '野生 ') + e.name;
+  ui.eLv.textContent = 'Lv.' + e.level;
+  ui.eHp.style.width = (e.hp / e.maxhp * 100).toFixed(1) + '%';
+  ui.eHpWrap.classList.toggle('low', e.hp / e.maxhp < .3);
+  ui.eType.textContent = TYPE_NAME[SPECIES[e.key].type];
+  ui.eType.style.background = TYPE_COLOR[SPECIES[e.key].type];
+  const eSt = e.status ? STATUS[e.status] : null;
+  const eTrait = traitOf(e);
+  ui.eType.innerHTML = TYPE_NAME[SPECIES[e.key].type] +
+    (eTrait ? `<span class="status-tag" style="background:#8d6fe0">${eTrait.name}</span>` : '') +
+    (eSt ? `<span class="status-tag" style="background:${eSt.color}">${eSt.name}</span>` : '');
+  ui.ePips.innerHTML = '';
+  spriteInto(ui.pSprite, m.key, false);
+  spriteInto(ui.eSprite, e.key, true);
+}
+
+function renderActions() {
+  return new Promise(resolve => {
+    const box = $('#bActions');
+    let settled = false;
+    const done = v => { if (settled) return; settled = true; box.innerHTML = ''; resolve(v); };
+
+    function drawMain() {
+      box.innerHTML = '';
+      const m = BT.mine;
+
+      const row = document.createElement('div');
+      row.className = 'brow moves';
+      m.moves.forEach(mv => {
+        const def = MOVES[mv.id];
+        const banned = !!BT.banType && def.type === BT.banType;
+        const b = document.createElement('button');
+        b.innerHTML = `${def.name}<small>${banned ? '本层禁用' : TYPE_NAME[def.type] + ' · PP ' + mv.pp}</small>`;
+        b.disabled = mv.pp <= 0 || banned;
+        b.onclick = () => done({ kind:'move', move:mv.id });
+        row.appendChild(b);
+      });
+      box.appendChild(row);
+
+      const row2 = document.createElement('div');
+      row2.className = 'brow util';
+      const mk = (label, sub, fn, dis) => {
+        const b = document.createElement('button');
+        b.innerHTML = `${label}<small>${sub}</small>`;
+        b.disabled = !!dis;
+        b.onclick = fn;
+        row2.appendChild(b);
+      };
+      const alive = S.party.filter(p => p.hp > 0 && p !== BT.mine);
+      const inTower = BT.tag === 'tower';
+      mk('共鸣', '查看规则', () => done({ kind:'info' }));
+      mk('换人', alive.length ? `${alive.length} 只待命` : '无人可换',
+        () => drawSwitch(), !alive.length);
+      mk('共鸣球', inTower ? '塔内禁用' : '×' + S.balls,
+        () => done({ kind:'ball' }), S.balls <= 0 || inTower);
+      mk('药水', '×' + S.tonic, () => done({ kind:'item' }), S.tonic <= 0);
+      mk('逃跑', inTower ? '塔内不可' : (BT.trainer ? '试炼中不可' : '野战时可用'),
+        () => done({ kind:'run' }), !!BT.trainer);
+      box.appendChild(row2);
+    }
+
+    function drawSwitch() {
+      box.innerHTML = '';
+      const row = document.createElement('div');
+      row.className = 'brow switch';
+      S.party.filter(p => p.hp > 0 && p !== BT.mine).forEach(p => {
+        const b = document.createElement('button');
+        b.innerHTML = `${p.name}<small>Lv.${p.level} · ${p.hp}/${p.maxhp}</small>`;
+        b.onclick = () => done({ kind:'switch', target:p });
+        row.appendChild(b);
+      });
+      const back = document.createElement('button');
+      back.innerHTML = '返回<small>取消</small>';
+      back.onclick = () => drawMain();
+      row.appendChild(back);
+      box.appendChild(row);
+    }
+
+    drawMain();
+  });
+}
+
+async function startBattle(enemy, opts) {
+  if (BT) return;                       /* 防止战斗重入 */
+  opts = opts || {};
+  BT = {
+    enemy, mine:S.party.find(p => p.hp > 0), trainer:opts.trainer || null,
+    queue:opts.queue || [], chain:0, chainType:null, over:false,
+    tag:opts.tag || null, floor:opts.floor || 0,
+    limitTurn:opts.limitTurn || 0, turn:0,
+    banType:opts.banType || null, noResonance:!!opts.noResonance,
+    bossPhase:1, bossUsed:false
+  };
+  if (!BT.mine) { await loseBattle(); return; }
+  S.mode = 'battle';
+  dexSee(enemy.key);
+  rollWeather();
+  SFX.init(); SFX.play('enc');
+  BGM.init(); BGM.switch('battle');
+  $('#battle').classList.remove('hidden');
+  renderBattle();
+  await msg(opts.trainer ? `${opts.trainer} 发起了共鸣试炼！` : `野生的 ${enemy.name} 出现了！`);
+  if (opts.trainer) await msg(`对方派出了 ${enemy.name}！`);
+  if (!S.flags.tipRes) {
+    S.flags.tipRes = true;
+    await msg('提示：连续使用同属性招式 3 次会触发「共鸣」，威力提升且不消耗 PP。');
+  }
+  await battleLoop();
+}
+
+async function nextEnemy() {
+  if (!BT.queue.length) return false;
+  BT.enemy = BT.queue.shift();
+  BT.chain = 0; BT.chainType = null;
+  BT.over = false;
+  renderBattle();
+  await msg(`对方派出了 ${BT.enemy.name}！`);
+  return true;
+}
+
+/* Boss 专属技能：低血量时回血 / 护盾 / 换阶段，仅训练师战触发 */
+async function bossGimmick() {
+  if (!BT || !BT.trainer) return false;
+  const e = BT.enemy;
+  const pct = e.hp / e.maxhp;
+  if (BT.bossPhase === 1 && pct < 0.4 && !e.bossUsed) {
+    e.bossUsed = true;
+    const heal = Math.round(e.maxhp * 0.3);
+    e.hp = Math.min(e.maxhp, e.hp + heal);
+    SFX.play('heal');
+    renderBattle();
+    await msg(`${e.name} 集中精神，回复了 ${heal} 点体力！`);
+    return true;
+  }
+  if (BT.bossPhase === 1 && pct < 0.2 && BT.tag === 'tower') {
+    BT.bossPhase = 2;
+    SFX.play('reson');
+    await msg(`${e.name} 的共鸣开始躁动，攻击变得凶猛！`);
+    e.bossEnrage = true;
+    return true;
+  }
+  return false;
+}
+
+async function useMove(side, moveId) {
+  const atk = side === 'mine' ? BT.mine : BT.enemy;
+  const def = side === 'mine' ? BT.enemy : BT.mine;
+  const mv = MOVES[moveId];
+  const slot = (atk.moves || []).find(s => s.id === moveId);
+
+  let res = 1, resonance = false;
+  if (side === 'mine' && !BT.noResonance) {
+    const need = atk.bond >= 60 ? 2 : 3;
+    if (BT.chainType === mv.type) BT.chain++;
+    else { BT.chain = 1; BT.chainType = mv.type; }
+    if (BT.chain >= need) { resonance = true; res = 1.6; BT.chain = 0; }
+    else if (BT.chain > 1) res = 1 + 0.1 * (BT.chain - 1);
+  }
+  if (slot && !resonance) slot.pp = Math.max(0, slot.pp - 1);
+
+  await msg(`${atk.name} 使出了 ${mv.name}！`);
+  SFX.play(resonance ? 'reson' : 'hit');
+  if (resonance) await msg('◇ 共鸣迸发！威力提升，且不消耗 PP');
+  hitFx(side === 'mine' ? ui.eSprite : ui.pSprite);
+
+  const weather = weatherInfo();
+  const aStats = effStats(atk, weather), dStats = effStats(def, weather);
+  let mult = (CHART[mv.type] || {})[SPECIES[def.key].type] || 1;
+  if (weather && weather[mv.type]) { mult *= weather[mv.type]; }
+  let critChance = 0.0625 + (traitOf(atk) && traitOf(atk).critBonus ? traitOf(atk).critBonus : 0);
+  const crit = Math.random() < critChance ? 1.5 : 1;
+  let dmg = Math.floor((((2 * atk.level / 5 + 2) * mv.power * aStats.atk / dStats.def) / 50) + 2);
+  let enrage = (atk === BT.enemy && atk.bossEnrage) ? 1.25 : 1;
+  dmg = Math.max(1, Math.floor(dmg * mult * res * crit * enrage * (0.86 + Math.random() * 0.14)));
+  def.hp = Math.max(0, def.hp - dmg);
+  renderBattle();
+  floatyDamage(side === 'mine' ? ui.eSprite : ui.pSprite, dmg, crit > 1);
+  if (dmg >= (side === 'mine' ? BT.enemy : BT.mine).maxhp * 0.3) shakeScreen();
+  if (crit > 1) { SFX.play('crit'); await msg('会心一击！'); }
+  if (mult > 1) await msg('效果拔群！');
+  if (mult < 1) await msg('效果不太好……');
+
+  /* 招式附加状态效果 */
+  if (mv.fx && def.hp > 0) {
+    for (const k in mv.fx) {
+      if (Math.random() < mv.fx[k]) {
+        def.status = k;
+        renderBattle();
+        await msg(`${def.name} 陷入了「${STATUS[k].name}」！`);
+        break;
+      }
+    }
+  }
+  await wait(260);
+}
+
+function pickEnemyMove() {
+  const e = BT.enemy;
+  const usable = (e.moves || []).filter(m => m.pp > 0);
+  if (!usable.length) return (e.moves && e.moves[0] ? e.moves[0].id : 'tackle');
+  const myType = SPECIES[BT.mine.key].type;
+  const weather = weatherInfo();
+  const scored = usable.map(m => {
+    let mm = (CHART[MOVES[m.id].type] || {})[myType] || 1;
+    if (weather && weather[MOVES[m.id].type]) mm *= weather[MOVES[m.id].type];
+    return { id:m.id, s:mm * (0.7 + Math.random() * 0.6) };
+  }).sort((a, b) => b.s - a.s);
+  return scored[0].id;
+}
+
+async function enemyAct() {
+  const e = BT.enemy;
+  const est = e.status ? STATUS[e.status] : null;
+  if (est && (est.dot || est.skipAll)) {
+    if (est.dot) {
+      const tick = Math.max(1, Math.round(e.maxhp * est.dotPct));
+      e.hp = Math.max(0, e.hp - tick);
+      renderBattle();
+      await msg(`${e.name} 被${est.text}，损失 ${tick} 点体力！`);
+      if (e.hp <= 0) {
+        if (await nextEnemy()) return true;
+        if (BT.tag === 'tower') { await towerWin(); return false; }
+        await winBattle(); return false;
+      }
+    }
+    if (est.skipAll && e.hp > 0) {
+      e.status = null; renderBattle();
+      await msg(`${e.name} ${est.text}。`);
+      return true;
+    }
+  }
+  if (est && est.skip && e.hp > 0 && Math.random() < est.skip) {
+    await msg(`${e.name} ${est.text}，没能出手！`);
+    return true;
+  }
+  await useMove('enemy', pickEnemyMove());
+  if (!BT) return false;
+  if (BT.mine.hp <= 0) { await handleFaint(); if (!BT) return false; }
+  await bossGimmick();
+  return true;
+}
+async function towerTurnEnd() {
+  if (!BT || BT.tag !== 'tower' || !BT.limitTurn) return false;
+  BT.turn++;
+  if (BT.turn >= BT.limitTurn) { await towerFail(); return true; }
+  return false;
+}
+async function battleLoop() {
+  const my = BT;
+  while (BT && BT === my && !BT.over) {
+    if (!BT.mine || BT.mine.hp <= 0) {
+      const nx = S.party.find(p => p.hp > 0);
+      if (!nx) { await loseBattle(); return; }
+      BT.mine = nx; BT.chain = 0; renderBattle();
+      await msg(`上吧，${nx.name}！`);
+    }
+    renderBattle();
+    /* 我方回合开始的状态结算：灼烧/束缚掉血，畏缩跳过 */
+    const mySt = BT.mine.status ? STATUS[BT.mine.status] : null;
+    if (mySt && (mySt.dot || mySt.skipAll)) {
+      if (mySt.dot) {
+        const tick = Math.max(1, Math.round(BT.mine.maxhp * mySt.dotPct));
+        BT.mine.hp = Math.max(0, BT.mine.hp - tick);
+        renderBattle();
+        await msg(`${BT.mine.name} 被${mySt.text}，损失 ${tick} 点体力！`);
+        if (BT.mine.hp <= 0) { await handleFaint(); if (!BT) return; }
+      }
+      if (mySt.skipAll && BT.mine.hp > 0) {
+        BT.mine.status = null; renderBattle();
+        await msg(`${BT.mine.name} ${mySt.text}。`);
+        if (!(await enemyAct())) return;
+        if (await towerTurnEnd()) return;
+        continue;
+      }
+    }
+    if (mySt && mySt.skip && BT.mine.hp > 0 && Math.random() < mySt.skip) {
+      await msg(`${BT.mine.name} ${mySt.text}，没能出手！`);
+      if (!(await enemyAct())) return;
+      if (await towerTurnEnd()) return;
+      continue;
+    }
+
+    const act = await renderActions();
+    if (!BT || BT !== my) return;
+
+    if (act.kind === 'info') {
+      const need = BT.mine.bond >= 60 ? 2 : 3;
+      let txt = `连续使用同属性招式 ${need} 次可触发共鸣（当前 ${BT.chain}/${need}）。`;
+      if (BT.banType) txt += ` 本层禁用${TYPE_NAME[BT.banType]}属性招式。`;
+      if (BT.noResonance) txt += ' 本层共鸣被封印。';
+      if (BT.limitTurn) txt += ` 已用 ${BT.turn}/${BT.limitTurn} 回合。`;
+      await msg(txt);
+      continue;
+    }
+    if (act.kind === 'switch') {
+      SFX.play('ui');
+      await msg(`回来吧，${BT.mine.name}！`);
+      BT.mine = act.target;
+      BT.chain = 0; BT.chainType = null;
+      renderBattle();
+      await msg(`上吧，${act.target.name}！`);
+      if (!(await enemyAct())) return;
+      if (await towerTurnEnd()) return;
+      continue;
+    }
+    if (act.kind === 'run') {
+      if (passiveRunOk()) { SFX.play('run'); await msg('静电感应起了作用，成功脱身！'); endBattle(); return; }
+      const _w = weatherInfo();
+      const _ms = effStats(BT.mine, _w).spd, _es = effStats(BT.enemy, _w).spd;
+      if (Math.random() < 0.6 + (_ms - _es) * 0.01) {
+        SFX.play('run'); await msg('成功脱身了！'); endBattle(); return;
+      }
+      await msg('没能逃走……');
+      if (!(await enemyAct())) return;
+      if (await towerTurnEnd()) return;
+      continue;
+    }
+    if (act.kind === 'ball') {
+      if (BT.trainer) { await msg('不能捕捉别人的伙伴！'); continue; }
+      const ok = await tryCapture();
+      if (ok) return;
+      if (!BT) return;
+      if (!(await enemyAct())) return;
+      if (await towerTurnEnd()) return;
+      continue;
+    }
+    if (act.kind === 'item') {
+      if (S.tonic <= 0) { await msg('药水用完了……'); continue; }
+      S.tonic--;
+      const heal = 22;
+      BT.mine.hp = Math.min(BT.mine.maxhp, BT.mine.hp + heal);
+      renderBattle();
+      await msg(`${BT.mine.name} 恢复了 ${heal} 点体力。`);
+      if (!(await enemyAct())) return;
+      if (await towerTurnEnd()) return;
+      continue;
+    }
+    if (act.kind === 'move') {
+      const w = weatherInfo();
+      const mineSpd = effStats(BT.mine, w).spd;
+      const eneSpd = effStats(BT.enemy, w).spd;
+      const mineFirst = mineSpd >= eneSpd;
+      if (mineFirst) {
+        await useMove('mine', act.move);
+        if (!BT) return;
+        if (BT.enemy.hp <= 0) {
+          if (await nextEnemy()) continue;
+          if (BT.tag === 'tower') { await towerWin(); return; }
+          await winBattle(); return;
+        }
+        if (!(await enemyAct())) return;
+        if (await towerTurnEnd()) return;
+      } else {
+        await useMove('enemy', pickEnemyMove());
+        if (!BT) return;
+        if (BT.mine.hp <= 0) { await handleFaint(); if (!BT) return; }
+        await useMove('mine', act.move);
+        if (!BT) return;
+        if (BT.enemy.hp <= 0) {
+          if (await nextEnemy()) continue;
+          if (BT.tag === 'tower') { await towerWin(); return; }
+          await winBattle(); return;
+        }
+        if (await towerTurnEnd()) return;
+      }
+    }
+  }
+}
+
+async function handleFaint() {
+  await msg(`${BT.mine.name} 失去了战斗能力……`);
+  SFX.play('faint');
+  BT.chain = 0;
+  const nx = S.party.find(p => p.hp > 0);
+  if (!nx) { await loseBattle(); return; }
+  BT.mine = nx; renderBattle();
+  await msg(`上吧，${nx.name}！`);
+}
+
+async function tryCapture() {
+  if (S.balls <= 0) { await msg('共鸣球用完了……'); return false; }
+  S.balls--;
+  await msg('你投出了共鸣球！');
+  const j = await timingGame(1, 0.95, 26, '共鸣捕捉');
+  const mult = ({ perfect:1.9, good:1.45, ok:1.15, miss:0.65 })[j[0]] || 1;
+  await msg(({ perfect:'完美节拍！球稳稳扣住了。', good:'节奏不错！',
+               ok:'勉强跟上……', miss:'节拍乱了……' })[j[0]]);
+  const sp = SPECIES[BT.enemy.key];
+  let rate = sp.catch * (1 - 0.62 * BT.enemy.hp / BT.enemy.maxhp) * mult * 1.1 * dexCatchBonus() * passiveCatchBonus();
+  rate = clamp(rate, .06, .95);
+  for (let i = 0; i < 3; i++) { await wait(340); await msg('摇晃' + '·'.repeat(i + 1)); }
+  if (Math.random() < rate) { await captureSuccess(); return true; }
+  await msg(`可惜！${BT.enemy.name} 挣脱了出来。`);
+  return false;
+}
+
+async function captureSuccess() {
+  const caught = BT.enemy;
+  await msg(`太好了！捕获了 ${caught.name}！`);
+  dexCatch(caught.key);
+  SFX.play('catch');
+  caught.hp = Math.max(1, caught.hp);
+  caught.bond = 10;
+  if (S.party.length < 6) { S.party.push(caught); await msg(`${caught.name} 加入了队伍。`); }
+  else { S.box.push(caught); await msg('队伍已满，它被送往了营地的寄存处。'); }
+  const n = dexCount();
+  if (n > 1) await msg(`图鉴已记录 ${n} 种——捕捉率与篝火回复都变强了一点。`);
+  /* 图鉴里程碑：一次性奖励，直接进背包 */
+  for (const ms of DEX_MILESTONES) {
+    if (n < ms.n || S.flags['dex' + ms.n]) continue;
+    S.flags['dex' + ms.n] = true;
+    Object.keys(ms.grant).forEach(k => giveItem(k, ms.grant[k]));
+    SFX.play('win');
+    await msg('★ 图鉴奖励：' + ms.text);
+    await wait(420);
+  }
+  updateHud();
+  S.mode = 'battle';
+  saveGame();
+  endBattle();
+}
+
+/* 战斗掉落：等级越高越可能掉好东西 */
+function rollDrop(e) {
+  const r = Math.random();
+  if (e.level >= 10 && r < 0.05) return 'bell';
+  if (r < 0.24) return 'ball';
+  if (r < 0.36) return 'tonic';
+  return null;
+}
+
+async function winBattle() {
+  const e = BT.enemy;
+  S.weather = null;
+  await msg(`${e.name} 失去了战斗能力！`);
+  SFX.play('win');
+  const gain = e.level * 9 + 22;
+  const m = BT.mine;
+  await msg(`${m.name} 获得了 ${gain} 点经验。`);
+  m.exp += gain;
+  await checkLevel(m);
+  S.party.forEach(p => { if (p.hp > 0) p.bond = Math.min(100, p.bond + 2); });
+
+  /* 战斗收益：碎晶 + 概率掉落 */
+  S.battles++;
+  const shard = Math.round((e.level * 2 + 4) * passiveShardBonus());
+  S.shards += shard;
+  updateHud();
+  SFX.play('coin');
+  await msg(`拾到了 ${shard} 枚碎晶。`);
+  const drop = rollDrop(e);
+  if (drop) {
+    giveItem(drop, 1);
+    SFX.play('pick');
+    await msg(`${ITEMS[drop].name} ×1 从它身上掉了出来。`);
+  }
+  if (BT.trainer) {
+    S.flags.bossWin = true;
+    S.shards += 80; giveItem('ball', 2); giveItem('tonic', 2);
+    await msg('守塔人留下 80 碎晶、2 个共鸣球、2 瓶药水。');
+    endBattle();
+    await dialog('守塔人收起手中的共鸣铃。');
+    await dialog('「听得见。你和你伙伴的节拍，比我想的更稳。」');
+    await dialog('—— 试炼通过。风蚀洞窟的深处，从此对你敞开。');
+    updateHud();
+    return;
+  }
+  endBattle();
+}
+
+async function checkLevel(m) {
+  while (m.exp >= needExp(m.level)) {
+    m.exp -= needExp(m.level);
+    m.level++;
+    recalc(m);
+    SFX.play('level');
+    await msg(`${m.name} 升到了 Lv.${m.level}！`);
+    const sp = SPECIES[m.key];
+    const lr = sp.learn.find(l => l[0] === m.level);
+    if (lr && !m.moves.some(x => x.id === lr[1])) {
+      if (m.moves.length < 4) { m.moves.push({ id:lr[1], pp:MOVES[lr[1]].pp }); }
+      else { m.moves[0] = { id:lr[1], pp:MOVES[lr[1]].pp }; }
+      await msg(`学会了 ${MOVES[lr[1]].name}！`);
+    }
+    if (sp.evo && m.level >= sp.evo.lv) {
+      m.key = sp.evo.to; m.name = SPECIES[m.key].name;
+      recalc(m); m.hp = m.maxhp;
+      S.evolutions++;
+      await msg(`咦……？${m.name} 的样子变了！`);
+      grantAchievement('evolve');
+    }
+  }
+  renderBattle();
+}
+
+async function loseBattle() {
+  const wasTower = !!(BT && BT.tag === 'tower');
+  S.weather = null;
+  await msg('眼前一黑……');
+  endBattle();
+  S.party.forEach(p => { p.hp = p.maxhp; p.bond = Math.max(0, p.bond - 4); });
+  travel('town', 9, 10);
+  S.mode = 'world';
+  await dialog(wasTower ? '你在塔外的石阶上醒来。那一层可以重来。'
+                        : '你在篝火旁醒来，篝火守帮你照顾了伙伴们。');
+  S.mode = 'world';
+  saveGame();
+}
+
+function endBattle() {
+  BT = null;
+  S.weather = null;
+  BGM.switch('explore');
+  $('#battle').classList.add('hidden');
+  $('#bActions').innerHTML = '';
+  if (S.mode === 'battle' || S.mode === 'world' || S.mode === 'dialog') S.mode = 'world';
+  updateHud();
+  saveGame();
+}
+
+/* ---------------- 10. 节拍小游戏（捕捉 / 篝火 共用） ---------------- */
+function timingGame(rounds, speed, zoneW, title) {
+  return new Promise(resolve => {
+    const prevMode = S.mode;
+    const boxEl = $('#timing'), needle = $('#tNeedle'), zone = $('#tZone');
+    const fb = $('#tfb'), cnt = $('#tcount');
+    S.mode = 'timing';
+    boxEl.classList.remove('hidden');
+    $('#tTitle').textContent = title || '节拍共鸣';
+    zoneW = zoneW || 26;
+
+    let round = 0, hits = [], pos = 2, dir = 1, raf = 0, last = 0, locked = true, zStart = 20;
+
+    function newZone() {
+      zStart = 6 + Math.random() * (94 - zoneW - 6);
+      zone.style.left = zStart + '%';
+      zone.style.width = zoneW + '%';
+      zone.style.opacity = 1;
+    }
+    function frame(ts) {
+      if (!last) last = ts;
+      const dt = Math.min(48, ts - last); last = ts;
+      pos += dir * speed * dt * 0.058;
+      if (pos > 98) { pos = 98; dir = -1; }
+      if (pos < 2) { pos = 2; dir = 1; }
+      needle.style.left = pos + '%';
+      raf = requestAnimationFrame(frame);
+    }
+    function judge() {
+      const center = zStart + zoneW / 2, half = zoneW / 2, dist = Math.abs(pos - center);
+      if (dist <= half * 0.2) return 'perfect';
+      if (dist <= half * 0.5) return 'good';
+      if (dist <= half) return 'ok';
+      return 'miss';
+    }
+    function press() {
+      if (locked) return;
+      locked = true;
+      const r = judge();
+      hits.push(r);
+      SFX.play(r === 'perfect' ? 'perfect' : r);
+      fb.textContent = ({ perfect:'PERFECT', good:'GOOD', ok:'OK', miss:'MISS' })[r];
+      fb.className = r;
+      zone.style.opacity = .4;
+      round++;
+      setTimeout(() => {
+        if (round >= rounds) return finish();
+        newZone();
+        fb.textContent = 'READY'; fb.className = '';
+        cnt.textContent = `第 ${round + 1} / ${rounds} 拍 · 空格 / 点击`;
+        locked = false;
+      }, 380);
+    }
+    function finish() {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('keydown', onKey);
+      boxEl.removeEventListener('click', onClick);
+      boxEl.classList.add('hidden');
+      S.mode = prevMode === 'title' ? 'world' : prevMode;
+      resolve(hits);
+    }
+    function onKey(e) {
+      if (e.key === ' ' || e.key === 'Enter' || e.key === 'Spacebar') { e.preventDefault(); press(); }
+    }
+    function onClick() { press(); }
+
+    newZone();
+    cnt.textContent = `第 1 / ${rounds} 拍 · 空格 / 点击`;
+    fb.textContent = 'READY'; fb.className = '';
+    raf = requestAnimationFrame(frame);
+    window.addEventListener('keydown', onKey);
+    boxEl.addEventListener('click', onClick);
+    setTimeout(() => { locked = false; }, 320);
+  });
+}
+
+async function campfire() {
+  BGM.switch('camp');
+  const hits = await timingGame(5, 0.82, 20, '篝火共鸣');
+  const score = hits.reduce((s, h) =>
+    s + (h === 'perfect' ? 2 : h === 'good' ? 1.4 : h === 'ok' ? 1 : 0), 0);
+  const rate = clamp(0.06 * score, 0, 0.62 + 0.02 * dexCount() + passiveCampBonus());
+  let healed = 0;
+  const woke = [];
+  S.party.forEach(m => {
+    const before = m.hp;
+    if (m.hp <= 0) {
+      /* 倒下的伙伴也能被唤醒：节拍越准，醒来时的体力越多（至少 1 点） */
+      const wake = Math.max(1, Math.round(m.maxhp * Math.max(0.18, rate)));
+      m.hp = Math.min(m.maxhp, wake);
+      if (m.hp > 0) woke.push(m.name);
+    } else {
+      const h = Math.round(m.maxhp * rate);
+      m.hp = Math.min(m.maxhp, m.hp + h);
+    }
+    healed += m.hp - before;
+    m.bond = Math.min(100, m.bond + Math.round(score * 2.2));
+  });
+  SFX.play('heal');
+  BGM.switch('explore');
+  let best = '还行';
+  if (hits.filter(h => h === 'perfect').length >= 3) best = '出奇地准';
+  else if (hits.filter(h => h === 'miss').length >= 2) best = '有点乱';
+  await dialog(`篝火噼啪。这一轮节拍${best}（共鸣度 ${score.toFixed(1)}）——伙伴们恢复了 ${healed} 点体力，羁绊也升温了。`);
+  if (woke.length) await dialog(`${woke.join('、')} 在火边睁开了眼，重新站了起来。`);
+  saveGame();
+}
+
+/* ---------------- 11. 菜单 / 图鉴 / HUD ---------------- */
+function updateHud() {
+  $('#locName').textContent = MAPS[S.map].name +
+    (S.map === 'tower' ? ` · 第${towerFloor()}层` : '');
+  const sh = $('#hudShard'); if (sh) sh.textContent = '◈ ' + S.shards;
+  $('#hudParty').innerHTML = S.party.map(m =>
+    `<span class="pchip"><i><b style="width:${Math.round(m.hp / m.maxhp * 100)}%"></b></i></span>`).join('');
+}
+
+let menuTab = 'party';
+let menuDetail = -1;
+let dexSel = null;
+
+function swapParty(a, b) {
+  if (a < 0 || b < 0 || a >= S.party.length || b >= S.party.length) return;
+  [S.party[a], S.party[b]] = [S.party[b], S.party[a]];
+  menuDetail = b;
+  SFX.play('ui'); updateHud(); renderMenu(); saveGame();
+}
+function storeMon(i) {
+  if (S.party.length <= 1) return;
+  const m = S.party.splice(i, 1)[0];
+  S.box.push(m); menuDetail = -1;
+  SFX.play('ui'); updateHud(); renderMenu(); saveGame();
+  $('#mTip').textContent = `${m.name} 被送进了寄存箱。`;
+}
+function takeMon(i) {
+  if (S.party.length >= 6) return;
+  const m = S.box.splice(i, 1)[0];
+  if (m.hp <= 0) m.hp = Math.max(1, Math.round(m.maxhp * 0.2));
+  S.party.push(m); menuDetail = -1;
+  SFX.play('ui'); updateHud(); renderMenu(); saveGame();
+  $('#mTip').textContent = `${m.name} 回到了队伍。`;
+}
+
+function renderMenu() {
+  const tab = menuTab;
+  $('#mTitle').textContent = tab === 'party' ? '队伍' : tab === 'box' ? '寄存箱' : '图鉴';
+  $('#mBag').textContent = `${bagText()} · 寄存 ${S.box.length}`;
+  document.querySelectorAll('.tabs button').forEach(b =>
+    b.classList.toggle('on', b.dataset.tab === tab));
+  $('#mList').classList.toggle('hidden', tab === 'dex');
+  $('#mDexWrap').classList.toggle('hidden', tab !== 'dex');
+  if (tab === 'dex') { renderDex(); return; }
+
+  const list = tab === 'party' ? S.party : S.box;
+  $('#mList').innerHTML = list.map((m, i) => {
+    const pct = Math.round(m.hp / m.maxhp * 100);
+    const down = m.hp <= 0;
+    const sp = SPECIES[m.key];
+    const tail = down ? '倒下' : m.hp + '/' + m.maxhp + ' · 绊' + m.bond;
+    const open = menuDetail === i;
+    const ops = tab === 'party'
+      ? `${down ? `<button data-op="bell"${S.bell <= 0 ? ' disabled' : ''}>摇铃 ×${S.bell}</button>` : ''}
+         <button data-op="up"${i === 0 ? ' disabled' : ''}>↑ 上移</button>
+         <button data-op="down"${i === list.length - 1 ? ' disabled' : ''}>↓ 下移</button>
+         <button data-op="store"${S.party.length <= 1 ? ' disabled' : ''}>存入寄存箱</button>`
+      : `<button data-op="take"${S.party.length >= 6 ? ' disabled' : ''}>取出到队伍</button>`;
+    return `<div class="mrow${down ? ' down' : ''}${open ? ' sel' : ''}" data-i="${i}">
+        <b style="min-width:56px">${m.name}</b>
+        <span style="font-size:10px;color:#6d7683">Lv.${m.level}</span>
+        <i><b style="width:${pct}%"></b></i><em>${tail}</em></div>
+      <div class="mdetail${open ? ' open' : ''}" data-d="${i}">
+        <div class="dline">${TYPE_NAME[sp.type]} · 攻${m.stats.atk} 防${m.stats.def} 速${m.stats.spd} · 经验 ${m.exp}/${needExp(m.level)}</div>
+        <div class="dline">${m.moves.map(mv => `${MOVES[mv.id].name}(${mv.pp})`).join(' · ')}</div>
+        <div class="dops">${ops}</div></div>`;
+  }).join('') || `<div class="mrow" style="color:#8d96a3">${tab === 'party' ? '队伍是空的' : '寄存箱是空的'}</div>`;
+
+  $('#mList').querySelectorAll('.mrow[data-i]').forEach(row => {
+    row.onclick = () => {
+      const i = Number(row.dataset.i);
+      menuDetail = menuDetail === i ? -1 : i;
+      SFX.play('ui'); renderMenu();
+    };
+  });
+  $('#mList').querySelectorAll('.mdetail button').forEach(btn => {
+    btn.onclick = ev => {
+      ev.stopPropagation();
+      const i = Number(btn.closest('.mdetail').dataset.d);
+      switch (btn.dataset.op) {
+        case 'up': swapParty(i, i - 1); break;
+        case 'down': swapParty(i, i + 1); break;
+        case 'store': storeMon(i); break;
+        case 'take': takeMon(i); break;
+        case 'bell': useBell(i); break;
+      }
+    };
+  });
+}
+
+/* 复苏铃：菜单里直接唤醒倒下的伙伴 */
+function useBell(i) {
+  const m = S.party[i];
+  if (!m || m.hp > 0) return;
+  const tip = $('#mTip');
+  if (S.bell <= 0) {
+    SFX.play('miss');
+    tip.textContent = '没有复苏铃了 —— 镇上的货郎卖 ◈60 一只，篝火也能唤醒。';
+    return;
+  }
+  S.bell--;
+  m.hp = Math.max(1, Math.round(m.maxhp * 0.4));
+  SFX.play('heal');
+  updateHud();
+  renderMenu();
+  saveGame();
+  tip.textContent = `${m.name} 在铃声里睁开了眼，体力 ${m.hp}/${m.maxhp}。`;
+}
+
+function renderDex() {
+  const keys = Object.keys(SPECIES);
+  const wrap = $('#mDex');
+  wrap.innerHTML = keys.map(k => {
+    const d = S.dex[k] || {};
+    return `<div class="dxcell ${d.seen ? 'seen' : ''} ${dexSel === k ? 'sel' : ''}" data-k="${k}">
+      <canvas width="48" height="48"></canvas><div>${d.seen ? SPECIES[k].name : '???'}</div></div>`;
+  }).join('');
+
+  keys.forEach((k, i) => {
+    const cell = wrap.children[i];
+    const g = cell.querySelector('canvas').getContext('2d');
+    g.imageSmoothingEnabled = false;
+    const d = S.dex[k] || {};
+    if (!d.seen) {
+      g.fillStyle = '#c9d0d9';
+      g.font = 'bold 22px ui-monospace, monospace';
+      g.textAlign = 'center';
+      g.fillText('?', 24, 33);
+    } else {
+      drawMon(g, k, 0, 0, 3, false);
+      if (!d.caught) { g.fillStyle = 'rgba(238,241,245,.6)'; g.fillRect(0, 0, 48, 48); }
+    }
+    cell.onclick = () => { dexSel = k; SFX.play('ui'); renderDex(); };
+  });
+
+  const d = dexSel ? (S.dex[dexSel] || {}) : null;
+  if (!dexSel) {
+    $('#mDexDesc').innerHTML = `已记录 <b>${dexCount()}</b> / ${dexTotal()} 种 · ` +
+      `每捕获 1 种，捕捉率 +4%、篝火回复上限 +2%。<br>点一格查看笔记。`;
+  } else if (!d.seen) {
+    $('#mDexDesc').innerHTML = '还没遇到过这只伙伴。去更远的地方看看。';
+  } else {
+    const sp = SPECIES[dexSel];
+    $('#mDexDesc').innerHTML = `<b>${sp.name}</b> · ${TYPE_NAME[sp.type]} · ` +
+      (d.caught ? '已捕获' : '见过，未捕获') + `<br>${sp.desc}`;
+  }
+}
+
+/* ---------------- 11.5 商店 ---------------- */
+let shopRes = null;
+let shopId = 'general';
+
+function openShop(id) {
+  shopId = id || 'general';
+  return new Promise(res => {
+    shopRes = res;
+    S.mode = 'shop';
+    renderShop();
+    $('#shop').classList.remove('hidden');
+    SFX.play('open');
+  });
+}
+function renderShop() {
+  const shop = SHOPS[shopId];
+  $('#sTitle').textContent = shop.title;
+  $('#sWallet').textContent = '◈ ' + S.shards;
+  const list = $('#sList');
+  list.innerHTML = '';
+  shop.stock.forEach(key => {
+    const it = ITEMS[key];
+    const row = document.createElement('div');
+    row.className = 'srow';
+    row.innerHTML = `<div class="sicon">${it.icon}</div>
+      <div class="stxt"><b>${it.name}</b><small>${it.desc}</small></div>
+      <div class="sown">×${itemCount(key)}</div>
+      <button${S.shards < it.price ? ' disabled' : ''}>◈${it.price}</button>`;
+    row.querySelector('button').onclick = () => {
+      if (S.mode !== 'shop') return;
+      if (S.shards < it.price) { SFX.play('miss'); return; }
+      S.shards -= it.price;
+      giveItem(key, 1);
+      SFX.play('buy');
+      updateHud();
+      saveGame();
+      renderShop();
+    };
+    list.appendChild(row);
+  });
+}
+function closeShop() {
+  if (S.mode !== 'shop') return;
+  $('#shop').classList.add('hidden');
+  S.mode = 'world';
+  SFX.play('ui');
+  const r = shopRes; shopRes = null; if (r) r();
+}
+
+function openMenu() {
+  if (S.mode !== 'world') return;
+  S.mode = 'menu'; SFX.play('open');
+  menuTab = 'party'; menuDetail = -1; dexSel = null;
+  $('#mTip').textContent = '';
+  renderMenu(); $('#menu').classList.remove('hidden');
+}
+function closeMenu() {
+  $('#menu').classList.add('hidden');
+  if (S.mode === 'menu') S.mode = 'world';
+}
+
+/* ---------------- 12. 主循环 & 输入 ---------------- */
+let lastT = 0;
+function loop(now) {
+  const dt = lastT ? Math.min(50, now - lastT) : 16; lastT = now;
+  if (S.mode === 'world') {
+    const p = S.player;
+    if (p.moving) {
+      const dx = p.x - p.fx, dy = p.y - p.fy, d = Math.hypot(dx, dy);
+      const stepLen = 0.0085 * dt;
+      if (d <= stepLen) { p.fx = p.x; p.fy = p.y; p.moving = false; onArrive(); }
+      else { p.fx += dx / d * stepLen; p.fy += dy / d * stepLen; }
+    } else {
+      const d = ['up','down','left','right'].find(k => keys.has(k));
+      if (d) tryMove(d);
+    }
+  }
+  if (S.mode !== 'battle') renderWorld(now);
+  requestAnimationFrame(loop);
+}
+
+window.addEventListener('keydown', e => {
+  const k = e.key;
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(k)) e.preventDefault();
+  const dir = normKey(k);
+  if (dir) keys.add(dir);
+  if (S.mode === 'world') {
+    if (k === ' ' || k === 'Enter' || k === 'e' || k === 'E') { interact(); return; }
+    if (k === 'm' || k === 'M') { openMenu(); return; }
+  } else if (S.mode === 'dialog') {
+    if (k === ' ' || k === 'Enter') advanceDialog();
+  } else if (S.mode === 'menu') {
+    if (k === 'm' || k === 'M' || k === 'Escape') closeMenu();
+  } else if (S.mode === 'shop') {
+    if (k === 'Escape' || k === 'm' || k === 'M' || k === 'x' || k === 'X') closeShop();
+  }
+});
+window.addEventListener('keyup', e => {
+  const dir = normKey(e.key); if (dir) keys.delete(dir);
+});
+
+document.querySelectorAll('.dpad button[data-dir]').forEach(b => {
+  const dir = b.dataset.dir;
+  const on = ev => { ev.preventDefault(); if (S.mode === 'world') keys.add(dir); };
+  const off = ev => { ev.preventDefault(); keys.delete(dir); };
+  b.addEventListener('pointerdown', on);
+  b.addEventListener('pointerup', off);
+  b.addEventListener('pointerleave', off);
+  b.addEventListener('pointercancel', off);
+});
+$('#btnA').addEventListener('click', () => {
+  if (S.mode === 'world') interact();
+  else if (S.mode === 'dialog') advanceDialog();
+});
+$('#btnB').addEventListener('click', () => {
+  if (S.mode === 'menu') closeMenu();
+  else if (S.mode === 'shop') closeShop();
+});
+$('#mClose').addEventListener('click', closeMenu);
+$('#sClose').addEventListener('click', closeShop);
+$('#mCamp').addEventListener('click', async () => { closeMenu(); await campfire(); });
+$('#mSave').addEventListener('click', () => {
+  const ok = saveGame();
+  SFX.play(ok ? 'save' : 'miss');
+  const el = $('#mSave');
+  el.textContent = ok ? '已保存' : '保存失败';
+  setTimeout(() => { el.textContent = '保存'; }, 1100);
+});
+document.querySelectorAll('.tabs button').forEach(b => {
+  b.addEventListener('click', () => {
+    menuTab = b.dataset.tab; menuDetail = -1; dexSel = null;
+    renderMenu(); SFX.play('ui');
+  });
+});
+$('#btnMute').addEventListener('click', () => {
+  S.muted = !S.muted;
+  applyMute();
+  if (S.muted) BGM.stop(); else { BGM.start('explore'); SFX.play('ui'); }
+  saveGame();
+});
+
+/* ---------------- 13. 启动 ---------------- */
+function startGame(key) {
+  S.party = [newMon(key, 5)];
+  S.dex = {}; S.flags = {}; S.box = [];
+  S.balls = 6; S.tonic = 3; S.bell = 1; S.shards = 30;
+  S.mode = 'world';
+  $('#title').classList.add('hidden');
+  travel('town', 9, 10);
+  dexCatch(key);
+  updateHud();
+  saveGame();
+  SFX.init(); SFX.play('open');
+  (async () => {
+    await dialog('微光镇的清晨，篝火还留着余温。');
+    await dialog(`${S.party[0].name} 从睡袋里探出脑袋，尾巴轻轻拍着地面。`);
+    await dialog('—— 草在动。是时候出门了。');
+  })();
+}
+
+/* 标题页：有存档时出现「继续旅程」 */
+function renderTitle() {
+  const box = $('#titleBtns');
+  if (!box) return;
+  box.innerHTML = '';
+  const d = readSave();
+  if (d && d.party && d.party.length) {
+    const t = new Date(d.at || Date.now());
+    const hh = String(t.getHours()).padStart(2, '0');
+    const mm = String(t.getMinutes()).padStart(2, '0');
+    const b = document.createElement('button');
+    b.className = 'tbtn primary';
+    b.innerHTML = `继续旅程<small>${(MAPS[d.map] || {}).name || ''} · ${d.party.length} 只伙伴 · ${hh}:${mm}</small>`;
+    b.onclick = () => { if (loadGame()) renderTitle(); };
+    box.appendChild(b);
+    const hint = document.querySelector('#title .starters + .sub');
+    if (hint) hint.textContent = '或者选一只伙伴，开始新的旅程（会覆盖存档）';
+  }
+}
+
+(function boot() {
+  const box = $('#starterList');
+  ['tan','drop','bud'].forEach(key => {
+    const sp = SPECIES[key];
+    const card = document.createElement('div');
+    card.className = 'scard';
+    card.innerHTML = `<canvas width="64" height="64"></canvas><b>${sp.name}</b>
+      <small>${TYPE_NAME[sp.type]}</small>`;
+    const g = card.querySelector('canvas').getContext('2d');
+    g.imageSmoothingEnabled = false;
+    drawMon(g, key, 0, 0, 4, false);
+    card.onclick = () => startGame(key);
+    box.appendChild(card);
+  });
+  applyMute();
+  renderTitle();
+  updateHud();
+  requestAnimationFrame(loop);
+  BGM.start('explore');
+  const sd = readSave();
+  if (sd) { S.muted = !!sd.muted; applyMute(); }
+
+  /* 浏览器要求音频在用户手势后启动 */
+  const kick = () => {
+    SFX.init();
+    window.removeEventListener('pointerdown', kick);
+    window.removeEventListener('keydown', kick);
+  };
+  window.addEventListener('pointerdown', kick);
+  window.addEventListener('keydown', kick);
+})();
+</script>
+</body>
+</html>
