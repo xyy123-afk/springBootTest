@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>星际核心 · Three.js 极致视觉演示</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #030308; font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; color: #e8eaf6; }
+  #canvas { display: block; width: 100%; height: 100%; }
+
+  .topbar { position: fixed; top: 0; left: 0; right: 0; padding: 22px 30px; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; z-index: 10; }
+  .brand h1 { font-size: 20px; font-weight: 600; letter-spacing: 3px; background: linear-gradient(90deg, #00e5ff, #a78bfa, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .brand p { margin-top: 6px; font-size: 11px; letter-spacing: 1px; color: #7b83a8; }
+
+  .hud { background: rgba(12, 14, 30, 0.55); border: 1px solid rgba(120, 140, 200, 0.18); border-radius: 12px; padding: 14px 16px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); min-width: 190px; }
+  .hud .row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin: 5px 0; }
+  .hud .row span:first-child { color: #8b93b8; }
+  .hud .row span:last-child { font-variant-numeric: tabular-nums; font-weight: 600; color: #dfe4ff; }
+  .fps { font-size: 15px !important; }
+  .fps.good { color: #34d399 !important; }
+  .fps.mid { color: #fbbf24 !important; }
+  .fps.bad { color: #f87171 !important; }
+
+  .panel { position: fixed; bottom: 26px; left: 30px; background: rgba(12, 14, 30, 0.55); border: 1px solid rgba(120, 140, 200, 0.18); border-radius: 14px; padding: 18px 20px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); width: 280px; z-index: 10; }
+  .panel h2 { font-size: 12px; letter-spacing: 2px; color: #a78bfa; margin-bottom: 16px; font-weight: 600; text-transform: uppercase; }
+  .ctrl { margin-bottom: 14px; }
+  .ctrl label { display: flex; justify-content: space-between; font-size: 11px; color: #9ba3c7; margin-bottom: 7px; }
+  .ctrl label b { color: #e8eaf6; font-weight: 600; font-variant-numeric: tabular-nums; }
+  input[type=range] { width: 100%; height: 4px; border-radius: 3px; background: rgba(140,150,200,0.2); appearance: none; -webkit-appearance: none; outline: none; }
+  input[type=range]::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #00e5ff; cursor: pointer; box-shadow: 0 0 10px rgba(0,229,255,0.7); }
+  input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border: none; border-radius: 50%; background: #00e5ff; cursor: pointer; box-shadow: 0 0 10px rgba(0,229,255,0.7); }
+  .toggle { display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #9ba3c7; margin-bottom: 11px; cursor: pointer; }
+  .switch { width: 34px; height: 18px; border-radius: 10px; background: rgba(140,150,200,0.25); position: relative; transition: 0.25s; }
+  .switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #c7cde8; transition: 0.25s; }
+  .toggle.on .switch { background: #00e5ff; }
+  .toggle.on .switch::after { left: 18px; background: #030308; }
+
+  .hint { position: fixed; bottom: 30px; right: 30px; font-size: 11px; color: #6a7296; text-align: right; line-height: 1.8; z-index: 10; pointer-events: none; }
+  .hint b { color: #a78bfa; font-weight: 600; }
+
+  .loading { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #030308; z-index: 50; transition: opacity 0.8s; }
+  .loading .ring { width: 50px; height: 50px; border: 2px solid rgba(0,229,255,0.15); border-top-color: #00e5ff; border-radius: 50%; animation: spin 1s linear infinite; }
+  .loading p { margin-top: 20px; font-size: 12px; letter-spacing: 2px; color: #7b83a8; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .fade-out { opacity: 0; pointer-events: none; }
+  .error { color: #f87171; font-size: 13px; max-width: 500px; text-align: center; line-height: 1.8; }
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<div class="topbar">
+  <div class="brand">
+    <h1>星际核心 · COSMIC CORE</h1>
+    <p>THREE.JS REALTIME RENDERING DEMO</p>
+  </div>
+  <div class="hud">
+    <div class="row"><span>帧率 FPS</span><span class="fps good" id="fps">--</span></div>
+    <div class="row"><span>帧耗时</span><span id="ms">-- ms</span></div>
+    <div class="row"><span>粒子总数</span><span id="particles">--</span></div>
+    <div class="row"><span>三角面</span><span id="tris">--</span></div>
+    <div class="row"><span>绘制调用</span><span id="calls">--</span></div>
+    <div class="row"><span>分辨率</span><span id="res">--</span></div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>性能调节台</h2>
+  <div class="ctrl">
+    <label>粒子密度 <b id="vParticle">12000</b></label>
+    <input type="range" id="sParticle" min="1000" max="40000" step="1000" value="12000">
+  </div>
+  <div class="ctrl">
+    <label>旋转速度 <b id="vSpeed">1.0x</b></label>
+    <input type="range" id="sSpeed" min="0" max="30" step="1" value="10">
+  </div>
+  <div class="ctrl">
+    <label>辉光强度 <b id="vBloom">1.8</b></label>
+    <input type="range" id="sBloom" min="0" max="35" step="1" value="18">
+  </div>
+  <div class="toggle on" id="tRotate"><span>自动旋转</span><div class="switch"></div></div>
+  <div class="toggle on" id="tBloom"><span>辉光后处理</span><div class="switch"></div></div>
+  <div class="toggle" id="tWire"><span>线框模式</span><div class="switch"></div></div>
+</div>
+
+<div class="hint">
+  拖拽 <b>旋转视角</b> · 滚轮 <b>缩放</b><br>
+  拖动左侧滑块 <b>实时压测性能</b>
+</div>
+
+<div class="loading" id="loading">
+  <div class="ring"></div>
+  <p id="loadText">正在构建星际场景...</p>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const canvas = document.getElementById('canvas');
+const loading = document.getElementById('loading');
+
+try {
+  // ---------- 基础设置 ----------
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x030308, 0.018);
+
+  const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 1000);
+  camera.position.set(0, 7, 24);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.minDistance = 8;
+  controls.maxDistance = 60;
+  controls.autoRotate = false;
+
+  // ---------- 后处理 ----------
+  const composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+  const bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 1.8, 0.45, 0.08);
+  composer.addPass(bloomPass);
+  const outputPass = new OutputPass();
+  composer.addPass(outputPass);
+  let bloomEnabled = true;
+
+  // ---------- 噪声 GLSL（供核心球复用） ----------
+  const noiseGLSL = `
+    vec3 hash3(vec3 p){
+      p = vec3(dot(p, vec3(127.1,311.7,74.7)), dot(p, vec3(269.5,183.3,246.1)), dot(p, vec3(113.5,271.9,124.6)));
+      return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
+    }
+    float noise3(vec3 p){
+      vec3 i = floor(p); vec3 f = fract(p);
+      vec3 u = f*f*(3.0-2.0*f);
+      return mix(mix(mix(dot(hash3(i+vec3(0,0,0)), f-vec3(0,0,0)), dot(hash3(i+vec3(1,0,0)), f-vec3(1,0,0)), u.x),
+                     mix(dot(hash3(i+vec3(0,1,0)), f-vec3(0,1,0)), dot(hash3(i+vec3(1,1,0)), f-vec3(1,1,0)), u.x), u.y),
+                 mix(mix(dot(hash3(i+vec3(0,0,1)), f-vec3(0,0,1)), dot(hash3(i+vec3(1,0,1)), f-vec3(1,0,1)), u.x),
+                     mix(dot(hash3(i+vec3(0,1,1)), f-vec3(0,1,1)), dot(hash3(i+vec3(1,1,1)), f-vec3(1,1,1)), u.x), u.y), u.z);
+    }
+    float fbm(vec3 p){
+      float v = 0.0, a = 0.5;
+      for(int i=0;i<5;i++){ v += a*noise3(p); p *= 2.02; a *= 0.5; }
+      return v;
+    }
+  `;
+
+  // ---------- 中心能量球 ----------
+  const coreUniforms = {
+    uTime: { value: 0 },
+    uColorA: { value: new THREE.Color(0x00d9ff) },
+    uColorB: { value: new THREE.Color(0x6d28d9) },
+    uColorC: { value: new THREE.Color(0xff2d95) }
+  };
+
+  const coreMat = new THREE.ShaderMaterial({
+    uniforms: coreUniforms,
+    vertexShader: `
+      uniform float uTime;
+      varying vec3 vNormal;
+      varying vec3 vPos;
+      varying vec3 vView;
+      ${noiseGLSL}
+      void main(){
+        vNormal = normalize(normalMatrix * normal);
+        float n = fbm(position * 1.4 + uTime * 0.15);
+        vec3 displaced = position + normal * n * 0.35;
+        vec4 mv = modelViewMatrix * vec4(displaced, 1.0);
+        vPos = displaced;
+        vView = normalize(-mv.xyz);
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      uniform vec3 uColorA, uColorB, uColorC;
+      varying vec3 vNormal;
+      varying vec3 vPos;
+      varying vec3 vView;
+      ${noiseGLSL}
+      void main(){
+        float n = fbm(vPos * 1.6 + vec3(0.0, uTime * 0.25, uTime * 0.1));
+        float t = clamp(n * 0.5 + 0.5, 0.0, 1.0);
+        vec3 color = mix(uColorA, uColorB, smoothstep(0.15, 0.65, t));
+        color = mix(color, uColorC, smoothstep(0.6, 1.0, t));
+        float fres = pow(1.0 - max(dot(normalize(vNormal), normalize(vView)), 0.0), 2.2);
+        color += fres * uColorA * 1.6;
+        color += pow(t, 3.0) * 0.6;
+        gl_FragColor = vec4(color, 1.0);
+      }
+    `
+  });
+
+  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(3.2, 32), coreMat);
+  scene.add(core);
+
+  // 外层辉光壳
+  const glowMat = new THREE.ShaderMaterial({
+    uniforms: coreUniforms,
+    vertexShader: `
+      varying vec3 vNormal; varying vec3 vView;
+      void main(){
+        vNormal = normalize(normalMatrix * normal);
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        vView = normalize(-mv.xyz);
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 uColorA;
+      varying vec3 vNormal; varying vec3 vView;
+      void main(){
+        float f = pow(1.0 - max(dot(normalize(vNormal), normalize(vView)), 0.0), 3.5);
+        gl_FragColor = vec4(uColorA, f * 0.55);
+      }
+    `,
+    transparent: true, blending: THREE.AdditiveBlending, side: THREE.BackSide, depthWrite: false
+  });
+  const glow = new THREE.Mesh(new THREE.SphereGeometry(4.4, 64, 64), glowMat);
+  scene.add(glow);
+
+  // ---------- 能量环 ----------
+  const rings = new THREE.Group();
+  const ringColors = [0x00e5ff, 0xa78bfa, 0xff2d95];
+  for (let i = 0; i < 3; i++) {
+    const geo = new THREE.TorusGeometry(6 + i * 1.6, 0.035 + i * 0.01, 8, 240);
+    const mat = new THREE.MeshBasicMaterial({ color: ringColors[i], transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending });
+    const ring = new THREE.Mesh(geo, mat);
+    ring.rotation.x = Math.PI / 2 + (i - 1) * 0.42;
+    ring.rotation.y = (i - 1) * 0.3;
+    ring.userData.spd = 0.12 + i * 0.06;
+    rings.add(ring);
+  }
+  scene.add(rings);
+
+  // ---------- 螺旋星系粒子 ----------
+  let galaxy, galaxyGeo, galaxyMat;
+  const GALAXY_SIZES = new Float32Array(40000);
+  const GALAXY_COLS = new Float32Array(40000 * 3);
+  const GALAXY_POS = new Float32Array(40000 * 3);
+  const palette = [new THREE.Color(0x00e5ff), new THREE.Color(0x8b5cf6), new THREE.Color(0xff2d95), new THREE.Color(0xffd580), new THREE.Color(0xffffff)];
+
+  function buildGalaxy(count) {
+    if (galaxy) { scene.remove(galaxy); galaxyGeo.dispose(); }
+    galaxyGeo = new THREE.BufferGeometry();
+    const pos = new Float32Array(count * 3);
+    const col = new Float32Array(count * 3);
+    const siz = new Float32Array(count);
+    const arms = 5;
+    for (let i = 0; i < count; i++) {
+      const r = 4.5 + Math.pow(Math.random(), 0.7) * 15;
+      const arm = (i % arms) / arms * Math.PI * 2;
+      const spin = r * 0.42;
+      const scatter = 0.35 + Math.random() * 1.1;
+      const sx = Math.pow(Math.random(), 3) * (Math.random() > 0.5 ? 1 : -1) * scatter;
+      const sy = (Math.random() - 0.5) * scatter * 0.55;
+      const sz = Math.pow(Math.random(), 3) * (Math.random() > 0.5 ? 1 : -1) * scatter;
+      pos[i*3]   = Math.cos(arm + spin) * r + sx;
+      pos[i*3+1] = sy;
+      pos[i*3+2] = Math.sin(arm + spin) * r + sz;
+      const c = palette[Math.floor(Math.random() * palette.length)];
+      col[i*3] = c.r; col[i*3+1] = c.g; col[i*3+2] = c.b;
+      siz[i] = 0.6 + Math.random() * 2.2;
+    }
+    galaxyGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    galaxyGeo.setAttribute('aColor', new THREE.BufferAttribute(col, 3));
+    galaxyGeo.setAttribute('aSize', new THREE.BufferAttribute(siz, 1));
+    galaxyMat = new THREE.ShaderMaterial({
+      uniforms: { uTime: { value: 0 }, uPR: { value: Math.min(devicePixelRatio, 2) } },
+      vertexShader: `
+        attribute vec3 aColor; attribute float aSize;
+        uniform float uPR; uniform float uTime;
+        varying vec3 vColor; varying float vAlpha;
+        void main(){
+          vColor = aColor;
+          vec3 p = position;
+          float swirl = uTime * 0.06 * (1.0 / (length(p.xz) * 0.12 + 1.0));
+          float ca = cos(swirl), sa = sin(swirl);
+          p.xz = mat2(ca, -sa, sa, ca) * p.xz;
+          vec4 mv = modelViewMatrix * vec4(p, 1.0);
+          gl_Position = projectionMatrix * mv;
+          gl_PointSize = aSize * uPR * (260.0 / -mv.z);
+          vAlpha = clamp(1.0 - (-mv.z) / 55.0, 0.0, 1.0);
+        }
+      `,
+      fragmentShader: `
+        varying vec3 vColor; varying float vAlpha;
+        void main(){
+          float d = length(gl_PointCoord - vec2(0.5));
+          if(d > 0.5) discard;
+          float s = pow(1.0 - d * 2.0, 2.2);
+          gl_FragColor = vec4(vColor, s * vAlpha);
+        }
+      `,
+      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false
+    });
+    galaxy = new THREE.Points(galaxyGeo, galaxyMat);
+    scene.add(galaxy);
+    document.getElementById('particles').textContent = count.toLocaleString();
+  }
+  buildGalaxy(12000);
+
+  // ---------- 背景星空 ----------
+  const starGeo = new THREE.BufferGeometry();
+  const starPos = new Float32Array(3000 * 3);
+  for (let i = 0; i < 3000; i++) {
+    const r = 120 + Math.random() * 180;
+    const th = Math.random() * Math.PI * 2;
+    const ph = Math.acos(2 * Math.random() - 1);
+    starPos[i*3]   = r * Math.sin(ph) * Math.cos(th);
+    starPos[i*3+1] = r * Math.cos(ph);
+    starPos[i*3+2] = r * Math.sin(ph) * Math.sin(th);
+  }
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+  const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0x8899cc, size: 0.7, sizeAttenuation: true, transparent: true, opacity: 0.8 }));
+  scene.add(stars);
+
+  // ---------- 动态轨道光点 ----------
+  const orbiters = [];
+  for (let i = 0; i < 6; i++) {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(0.14, 16, 16), new THREE.MeshBasicMaterial({ color: ringColors[i % 3] }));
+    m.userData = { r: 7 + i * 1.3, a: Math.random() * Math.PI * 2, spd: 0.3 + Math.random() * 0.5, y: (Math.random() - 0.5) * 3 };
+    scene.add(m); orbiters.push(m);
+  }
+
+  // ---------- 交互控制 ----------
+  let speed = 1.0, autoRotate = false, wireframe = false;
+  const $ = id => document.getElementById(id);
+
+  $('sParticle').addEventListener('input', e => {
+    const v = +e.target.value; $('vParticle').textContent = v.toLocaleString(); buildGalaxy(v);
+  });
+  $('sSpeed').addEventListener('input', e => {
+    speed = +e.target.value / 10; $('vSpeed').textContent = speed.toFixed(1) + 'x';
+  });
+  $('sBloom').addEventListener('input', e => {
+    const v = +e.target.value / 10; $('vBloom').textContent = v.toFixed(1); bloomPass.strength = v;
+  });
+  function bindToggle(id, cb) {
+    $(id).addEventListener('click', () => { const el = $(id); el.classList.toggle('on'); cb(el.classList.contains('on')); });
+  }
+  bindToggle('tRotate', v => { autoRotate = v; });
+  bindToggle('tBloom', v => { bloomEnabled = v; bloomPass.enabled = v; });
+  bindToggle('tWire', v => {
+    wireframe = v;
+    coreMat.wireframe = v;
+    glow.visible = !v;
+  });
+
+  // ---------- 性能监控 ----------
+  let frames = 0, lastFpsTime = performance.now(), lastFrame = performance.now();
+  function updateHUD(now) {
+    frames++;
+    const dt = now - lastFrame; lastFrame = now;
+    if (now - lastFpsTime >= 500) {
+      const fps = Math.round(frames * 1000 / (now - lastFpsTime));
+      const fpsEl = $('fps');
+      fpsEl.textContent = fps;
+      fpsEl.className = 'fps ' + (fps >= 50 ? 'good' : fps >= 30 ? 'mid' : 'bad');
+      $('ms').textContent = dt.toFixed(1) + ' ms';
+      $('tris').textContent = renderer.info.render.triangles.toLocaleString();
+      $('calls').textContent = renderer.info.render.calls;
+      $('res').textContent = Math.round(innerWidth * renderer.getPixelRatio()) + '×' + Math.round(innerHeight * renderer.getPixelRatio());
+      frames = 0; lastFpsTime = now;
+    }
+  }
+
+  // ---------- 自适应 ----------
+  addEventListener('resize', () => {
+    camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+    composer.setSize(innerWidth, innerHeight);
+  });
+
+  // ---------- 渲染循环 ----------
+  const clock = new THREE.Clock();
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+    const d = speed;
+
+    coreUniforms.uTime.value = t * d;
+    if (galaxyMat) galaxyMat.uniforms.uTime.value = t * d;
+    core.rotation.y += 0.03 * d;
+    core.rotation.x += 0.008 * d;
+    glow.rotation.y -= 0.01 * d;
+
+    rings.children.forEach((r, i) => { r.rotation.z += r.userData.spd * 0.1 * d; });
+    orbiters.forEach(o => {
+      o.userData.a += o.userData.spd * 0.15 * d;
+      o.position.set(Math.cos(o.userData.a) * o.userData.r, o.userData.y + Math.sin(t * 0.5 + o.userData.a) * 0.6, Math.sin(o.userData.a) * o.userData.r);
+    });
+    stars.rotation.y += 0.0004 * d;
+
+    controls.autoRotate = autoRotate;
+    controls.autoRotateSpeed = 0.6;
+    controls.update();
+
+    if (bloomEnabled) composer.render(); else renderer.render(scene, camera);
+    updateHUD(performance.now());
+  }
+
+  // 启动
+  animate();
+  loading.classList.add('fade-out');
+  setTimeout(() => loading.remove(), 900);
+
+} catch (err) {
+  console.error(err);
+  document.getElementById('loadText').innerHTML = '<div class="error">场景加载失败：' + err.message + '<br>请检查网络是否能访问 cdn.jsdelivr.net（three.js 依赖该 CDN）</div>';
+}
+</script>
+</body>
+</html>
