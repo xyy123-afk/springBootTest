@@ -1,0 +1,2032 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>光轮对决 · 双人贪吃蛇</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: radial-gradient(1100px 560px at 50% -12%, #ffffff 0%, #eef2f9 58%, #e5ebf5 100%);
+    color: #1e293b;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 22px 16px 44px;
+  }
+  .wrap { width: 100%; max-width: 860px; }
+  header { text-align: center; margin-bottom: 16px; }
+  h1 {
+    font-size: 30px;
+    letter-spacing: 2px;
+    font-weight: 800;
+    background: linear-gradient(90deg, #0891b2, #7c3aed, #db2777);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .sub { color: #64748b; font-size: 13px; margin-top: 6px; }
+
+  .scoreboard {
+    display: grid;
+    grid-template-columns: 1fr 66px 1fr;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .pcard {
+    --c: #06b6d4;
+    position: relative;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 11px 16px 12px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, .05);
+  }
+  .pcard::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: var(--c);
+  }
+  .pcard.p2 { --c: #ec4899; }
+  .pname { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
+  .pname .dot { width: 9px; height: 9px; border-radius: 3px; background: var(--c); box-shadow: 0 0 8px var(--c); }
+  .pname small { margin-left: auto; color: #94a3b8; font-weight: 500; font-size: 12px; }
+  .score { font-size: 30px; font-weight: 800; color: var(--c); line-height: 1.15; margin-top: 1px; }
+  .pips { display: flex; gap: 5px; margin-top: 5px; }
+  .pips i { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--c); opacity: .3; }
+  .pips i.on { background: var(--c); opacity: 1; box-shadow: 0 0 8px var(--c); }
+  .buffs { font-size: 12px; color: #64748b; min-height: 18px; margin-top: 5px; letter-spacing: .3px; }
+  .vs { text-align: center; color: #94a3b8; font-weight: 800; font-size: 17px; }
+  .round-no { font-size: 11px; color: #94a3b8; font-weight: 600; margin-top: 3px; white-space: nowrap; }
+
+  .format-bar {
+    display: flex; justify-content: center; align-items: center; gap: 8px;
+    margin: 0 0 12px; font-size: 12.5px; color: #64748b; flex-wrap: wrap;
+  }
+  .flabel { font-weight: 700; color: #94a3b8; }
+  .fmt {
+    border: 1px solid #cbd5e1; background: #fff; color: #475569;
+    padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: .15s;
+  }
+  .fmt:hover { background: #f1f5f9; transform: translateY(-1px); }
+  .fmt.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+  .fhint { color: #94a3b8; }
+
+  .arena {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #070b18;
+    box-shadow: 0 22px 48px -14px rgba(15, 23, 42, .38), 0 0 0 1px rgba(15, 23, 42, .08);
+  }
+  canvas { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; }
+
+  .arena-overlay {
+    position: absolute; inset: 0;
+    background: rgba(6, 10, 24, .92);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 16px; padding: 18px 22px; text-align: center;
+    color: #e2e8f0; overflow-y: auto;
+  }
+  .arena-overlay.hidden { display: none; }
+  .arena-overlay h2 { font-size: 24px; letter-spacing: 2px; color: #fff; }
+  .arena-overlay p { font-size: 12px; color: #94a3b8; margin-top: -12px; }
+  .map-cards { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .map-card {
+    width: 176px; text-align: left; cursor: pointer;
+    background: #111a34; border: 1px solid #334155; color: #cbd5e1;
+    border-radius: 12px; padding: 13px 15px; transition: .15s;
+  }
+  .map-card:hover { transform: translateY(-2px); border-color: #64748b; }
+  .map-card.active { border-color: #22d3ee; box-shadow: 0 0 0 2px rgba(34,211,238,.25); background: #0d2740; }
+  .map-card b { display: block; color: #fff; font-size: 14px; margin-bottom: 6px; }
+  .map-card span { font-size: 11.5px; color: #94a3b8; line-height: 1.55; }
+
+  .mode-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
+  .mode-row .flabel { color: #64748b; font-size: 11px; letter-spacing: 1px; }
+  .seg {
+    display: inline-flex; border: 1px solid #334155; border-radius: 9px;
+    overflow: hidden; background: #111a34;
+  }
+  .seg button {
+    border: 0; background: transparent; color: #94a3b8; cursor: pointer;
+    padding: 8px 14px; font-size: 12px; font-weight: 700; transition: .15s;
+    border-right: 1px solid #334155;
+  }
+  .seg button:last-child { border-right: 0; }
+  .seg button:hover { color: #e2e8f0; background: #16223f; }
+  .seg button.active { background: #22d3ee; color: #06202b; }
+  .seg.ai button.active { background: #a78bfa; color: #1a0b2e; }
+  .seg.disabled { opacity: .35; pointer-events: none; }
+  .p2badge { color: #a78bfa !important; }
+
+  .rbtn {
+    border: 1px solid #475569; background: #1e293b; color: #e2e8f0;
+    border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: .15s;
+  }
+  .rbtn:hover { background: #334155; }
+  .rbtn.active { background: #22d3ee; color: #06202a; border-color: #22d3ee; }
+  .rbtn.primary { background: linear-gradient(90deg, #0891b2, #7c3aed); border: 0; padding: 10px 28px; font-size: 14px; }
+  .rbtn:disabled { opacity: .4; cursor: not-allowed; }
+
+  .replay-bar {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: rgba(6, 10, 24, .9);
+    border-top: 1px solid rgba(148,163,184,.2);
+    display: flex; gap: 8px; align-items: center; justify-content: center;
+    flex-wrap: wrap; padding: 10px;
+  }
+  .replay-bar.hidden { display: none; }
+  .replay-info { color: #94a3b8; font-size: 12px; font-variant-numeric: tabular-nums; margin-right: 6px; }
+
+  .help { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .box {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 11px 14px;
+    font-size: 12.5px;
+    color: #475569;
+    line-height: 1.8;
+  }
+  .box b { color: #0f172a; }
+  .tag { display: inline-block; padding: 1px 6px; border-radius: 5px; background: #f1f5f9; font-weight: 700; color: #334155; }
+  .tag.c1 { background: #ecfeff; color: #0e7490; }
+  .tag.c2 { background: #fdf2f8; color: #be185d; }
+
+  .toolbar { display: flex; justify-content: center; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  button.mainbtn {
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #334155;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 9px 20px;
+    border-radius: 9px;
+    transition: .15s;
+  }
+  button.mainbtn:hover { background: #f1f5f9; transform: translateY(-1px); }
+  button.mainbtn.primary { background: #0f172a; color: #fff; border-color: #0f172a; }
+  button.mainbtn.primary:hover { background: #1e293b; }
+  button.mainbtn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+  @media (max-width: 620px) {
+    .help { grid-template-columns: 1fr; }
+    h1 { font-size: 24px; }
+    .score { font-size: 26px; }
+    .map-card { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>⚡ 光轮对决</h1>
+    <div class="sub">双人同屏 · 对角出生 · 永久轨迹 · 撞线即淘汰</div>
+  </header>
+
+  <div class="scoreboard">
+    <div class="pcard p1">
+      <div class="pname"><span class="dot"></span><span id="p1Title">玩家 1</span> <small id="p1Keys">W A S D</small></div>
+      <div class="score" id="s1">0</div>
+      <div class="pips" id="p1pips"></div>
+      <div class="buffs" id="b1">—</div>
+    </div>
+    <div class="vs">
+      <div>VS</div>
+      <div class="round-no" id="roundNo">第 1 局</div>
+    </div>
+    <div class="pcard p2">
+      <div class="pname"><span class="dot"></span><span id="p2Title">玩家 2</span> <small id="p2Keys">↑ ← ↓ →</small></div>
+      <div class="score" id="s2">0</div>
+      <div class="pips" id="p2pips"></div>
+      <div class="buffs" id="b2">—</div>
+    </div>
+  </div>
+
+  <div class="format-bar">
+    <span class="flabel">赛制</span>
+    <button class="fmt active" data-wins="2">3 局 2 胜</button>
+    <button class="fmt" data-wins="3">5 局 3 胜</button>
+    <span class="fhint" id="fhint">先胜 2 局者获胜</span>
+    <span class="flabel" style="margin-left:8px">地图</span>
+    <span class="fhint" id="mapHint">标准空地图</span>
+  </div>
+
+  <div class="arena">
+    <canvas id="game" width="800" height="600"></canvas>
+
+    <div class="arena-overlay" id="menuPanel">
+      <h2>选择对战模式与地图</h2>
+      <p>AI 陪练 = 你操控玩家 1 挑战电脑；AI 对决 = 两名 AI 自动互殴，你只管观战。🔥 地狱 = 对抗搜索，会预判你接下来好几步。</p>
+      <div class="mode-row">
+        <span class="flabel">对手</span>
+        <div class="seg" id="modeSeg">
+          <button class="active" data-mode="pvp">👥 双人对战</button>
+          <button data-mode="pve">🤖 AI 陪练</button>
+          <button data-mode="aivai">⚔️ AI 对决</button>
+        </div>
+      </div>
+      <div class="mode-row" id="diffRow">
+        <span class="flabel" id="diffLabelP1">玩家 1</span>
+        <div class="seg ai" id="diff1Seg">
+          <button data-diff="easy">菜鸟</button>
+          <button class="active" data-diff="normal">普通</button>
+          <button data-diff="hard">高手</button>
+          <button data-diff="hell" style="color:#fca5a5">🔥 地狱</button>
+        </div>
+        <span class="flabel" id="diffLabelP2">AI 难度</span>
+        <div class="seg ai" id="diffSeg">
+          <button data-diff="easy">菜鸟</button>
+          <button class="active" data-diff="normal">普通</button>
+          <button data-diff="hard">高手</button>
+          <button data-diff="hell" style="color:#fca5a5">🔥 地狱</button>
+        </div>
+      </div>
+      <div class="map-cards">
+        <button class="map-card active" data-map="standard">
+          <b>◻ 标准空地图</b>
+          <span>纯净场地，只靠走位与道具博弈。适合练手与正面对决。</span>
+        </button>
+        <button class="map-card" data-map="obstacle">
+          <b>▦ 障碍地图</b>
+          <span>5 组橙色掩体墙，把场地切成多条通道，卡视野、诱导对手撞墙。</span>
+        </button>
+        <button class="map-card" data-map="shrink">
+          <b>◎ 缩圈地图</b>
+          <span>每 30 秒边界向中心收 2 格，逼迫双方不断向内周旋。</span>
+        </button>
+      </div>
+      <button id="btnStart" class="rbtn primary">开始对战</button>
+    </div>
+
+    <div class="replay-bar hidden" id="replayBar">
+      <span class="replay-info" id="replayInfo">回放 0/0</span>
+      <button class="rbtn active" data-speed="1">1×</button>
+      <button class="rbtn" data-speed="0.5">0.5× 慢放</button>
+      <button class="rbtn" id="btnStep">逐帧 ▶</button>
+      <button class="rbtn" id="btnExitReplay">退出回放</button>
+    </div>
+  </div>
+
+  <div class="help">
+    <div class="box">
+      <b>手感 &amp; 操作</b><br>
+      <span class="tag c1">玩家1 · WASD</span> <span class="tag c2">玩家2 · 方向键</span><br>
+      <b>120ms 输入缓冲</b>可提前预按；加速有前摇 / 后摇平滑过渡，金色脉冲光晕预警冲刺。<br>
+      开局可选「AI 陪练」，玩家 2 交给电脑，四档难度：菜鸟 / 普通 / 高手 / <b>🔥 地狱</b>。<br>
+      地狱级用 α-β 对抗搜索 + 迭代加深，按对手最优应对推演多步，几乎不会自己撞死。<br>
+      每局结束后自动录制，可用下方「回放上局」逐帧复盘。<b>P</b> 暂停。
+    </div>
+    <div class="box">
+      <b>道具 &amp; 规则</b><br>
+      三种道具严格按 <b>⚡疾速 → 🌀瞬转 → 🛡护盾</b> 顺序刷新：疾速 3 秒加速；瞬转穿越一次轨迹；护盾 3 秒内自动抵消 1 次碰撞。<br>
+      刷新避开双方与全部轨迹、最多 3 个、14 秒消失。<br>
+      撞自己 / 撞对手 / 撞障碍 / 出界 / 缩圈分别提示。
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button id="btnPause" class="mainbtn primary">暂停 (P)</button>
+    <button id="btnReplay" class="mainbtn" disabled>回放上局</button>
+    <button id="btnMenu" class="mainbtn">切换地图</button>
+    <button id="btnReset" class="mainbtn">重新开始</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- 配置 ----------
+  const CELL = 20;
+  const COLS = 40;
+  const ROWS = 30;
+  const W = COLS * CELL;
+  const H = ROWS * CELL;
+  const TAU = Math.PI * 2;
+
+  const TICK = 10;
+  const INPUT_BUFFER_MS = 120;
+  const BOOST_RAMP_IN = 220;
+  const BOOST_RAMP_OUT = 320;
+  const BASE_SPEED = 82;
+  const BOOST_SPEED = 48;
+  const POWERUP_LIFE = 14000;
+  const MAX_POWERUPS = 3;
+  const SHIELD_MS = 3000;
+  const SHRINK_INTERVAL = 30000;
+  const SHRINK_STEP = 2;
+  const TRAIL_FADE_MS = 7000;
+  const TRAIL_MIN_GLOW = 0.24;
+  const ROUND_PAUSE = 1500;
+
+  // AI 陪练：反应间隔 / 失误率 / 领地权重 / 贴墙权重 / 进攻性，三档递进
+  // 高手 = Voronoi 领地博弈 + 贴墙切割 + 无失误；菜鸟 = 只看空间、经常走歪
+  // 地狱 = 对抗搜索（α-β 剪枝 + 迭代加深），把双方未来若干步都算进去，假设对手完美应对
+  const AI_CFG = {
+    easy:   { react: 300, mistake: 0.38, chase: 0.05, risk: 0.40, voronoi: 0.0, hug: 0.0, name: "菜鸟" },
+    normal: { react: 140, mistake: 0.08, chase: 0.30, risk: 0.12, voronoi: 0.6, hug: 0.5, name: "普通" },
+    hard:   { react: 55,  mistake: 0.00, chase: 0.85, risk: 0.04, voronoi: 1.0, hug: 1.0, name: "高手" },
+    hell:   { react: 0,   mistake: 0.00, chase: 0.00, risk: 0.00, voronoi: 1.0, hug: 0.0, name: "地狱", brain: "search", searchMs: 24 }
+  };
+  const AI_DIRS = [{ x: 0, y: -1 }, { x: 1, y: 0 }, { x: 0, y: 1 }, { x: -1, y: 0 }];
+
+  const POWERUP_CYCLE = ["boost", "phase", "shield"];
+  const POWERUP_META = {
+    boost: { icon: "⚡", color: "#fbbf24", name: "疾速" },
+    phase: { icon: "🌀", color: "#a78bfa", name: "瞬转" },
+    shield: { icon: "🛡", color: "#60a5fa", name: "护盾" }
+  };
+
+  const COLORS = [
+    { main: "#22d3ee", rgb: "34,211,238", soft: "rgba(34,211,238," },
+    { main: "#f472b6", rgb: "244,114,182", soft: "rgba(244,114,182," }
+  ];
+
+  const SPAWNS = [
+    { x: 6, y: 6, dir: { x: 1, y: 0 } },
+    { x: COLS - 7, y: ROWS - 7, dir: { x: -1, y: 0 } }
+  ];
+
+  const MAP_NAMES = { standard: "标准空地图", obstacle: "障碍地图", shrink: "缩圈地图" };
+  const CRASH_TEXT = {
+    own: "撞上自己的轨迹",
+    enemy: "撞上对手的轨迹",
+    edge: "冲出场地边界",
+    head: "与对手迎头相撞",
+    obstacle: "撞上固定障碍",
+    shrink: "被缩圈吞没"
+  };
+  const CRASH_SHORT = { own: "自撞!", enemy: "撞线!", edge: "出界!", head: "对撞!", obstacle: "障碍!", shrink: "缩圈!" };
+
+  // ---------- DOM ----------
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+  const sEl = [document.getElementById("s1"), document.getElementById("s2")];
+  const bEl = [document.getElementById("b1"), document.getElementById("b2")];
+  const pipEl = [document.getElementById("p1pips"), document.getElementById("p2pips")];
+  const roundNoEl = document.getElementById("roundNo");
+  const fhintEl = document.getElementById("fhint");
+  const mapHintEl = document.getElementById("mapHint");
+  const btnPause = document.getElementById("btnPause");
+  const btnReset = document.getElementById("btnReset");
+  const btnMenu = document.getElementById("btnMenu");
+  const btnReplay = document.getElementById("btnReplay");
+  const menuPanel = document.getElementById("menuPanel");
+  const replayBar = document.getElementById("replayBar");
+  const replayInfo = document.getElementById("replayInfo");
+  const btnStep = document.getElementById("btnStep");
+  const btnExitReplay = document.getElementById("btnExitReplay");
+  const fmtBtns = document.querySelectorAll(".fmt");
+  const mapBtns = document.querySelectorAll(".map-card");
+  const modeBtns = document.querySelectorAll("#modeSeg button");
+  const diffBtns = document.querySelectorAll("#diffSeg button");
+  const diff1Btns = document.querySelectorAll("#diff1Seg button");
+  const modeSeg = document.getElementById("modeSeg");
+  const diffSeg = document.getElementById("diffSeg");
+  const diff1Seg = document.getElementById("diff1Seg");
+  const diffRow = document.getElementById("diffRow");
+  const diffLabelP1 = document.getElementById("diffLabelP1");
+  const diffLabelP2 = document.getElementById("diffLabelP2");
+  const p1Title = document.getElementById("p1Title");
+  const p1Keys = document.getElementById("p1Keys");
+  const p2Title = document.getElementById("p2Title");
+  const p2Keys = document.getElementById("p2Keys");
+  const speedBtns = replayBar.querySelectorAll("[data-speed]");
+
+  // ---------- 状态 ----------
+  let grid = new Uint8Array(COLS * ROWS);
+  let trailTime = new Float32Array(COLS * ROWS);
+  let obstacleGrid = new Uint8Array(COLS * ROWS);
+  let obstacleCells = [];
+  let boundary = { minX: 0, maxX: COLS - 1, minY: 0, maxY: ROWS - 1 };
+  let activeMapType = "standard";
+  let selectedMap = "standard";
+  let vsAI = false;
+  let aiVsAi = false;
+  let selectedMode = "pvp";
+  let aiDifficulty = "normal";
+  let aiDifficulty1 = "normal";
+  let players = [];
+  let powerups = [];
+  let particles = [];
+  let floaters = [];
+
+  // menu | playing | paused | roundOver | gameOver | replay
+  let gameState = "menu";
+  let stateBeforeReplay = "roundOver";
+  let gameTime = 0;
+  let lastFrame = 0;
+  let tickAcc = 0;
+  let nextPowerupAt = 0;
+  let nextShrinkAt = 0;
+  let roundEndAt = 0;
+  let targetWins = 2;
+  let roundIndex = 1;
+  let powerupCycleIndex = -1;
+  let roundCrashes = [null, null];
+  let roundNote = "";
+
+  let currentReplay = null;
+  let lastReplay = null;
+  let replayView = null;
+  const hudCache = ["", ""];
+
+  const idx = (x, y) => y * COLS + x;
+  const clamp01 = function (x) { return x < 0 ? 0 : (x > 1 ? 1 : x); };
+  const smoothstep = function (x) { x = clamp01(x); return x * x * (3 - 2 * x); };
+
+  // ---------- 音效 ----------
+  let audioCtx = null;
+  function initAudio() {
+    if (audioCtx) return;
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audioCtx = null; }
+  }
+  function tone(freq, dur, type, vol, delay) {
+    if (!audioCtx) return;
+    try {
+      const t = audioCtx.currentTime + (delay || 0);
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = type || "sine";
+      o.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(vol || 0.06, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g);
+      g.connect(audioCtx.destination);
+      o.start(t);
+      o.stop(t + dur);
+    } catch (e) { /* 静默 */ }
+  }
+  function sfxPick(type) {
+    if (type === "boost") { tone(660, 0.10, "square", 0.045); tone(990, 0.14, "square", 0.045, 0.09); }
+    else if (type === "phase") { tone(520, 0.12, "triangle", 0.055); tone(780, 0.18, "triangle", 0.045, 0.10); }
+    else { tone(440, 0.12, "sine", 0.05); tone(660, 0.2, "sine", 0.045, 0.09); }
+  }
+  function sfxCrash(reason) {
+    if (reason === "edge" || reason === "shrink") tone(140, 0.32, "sawtooth", 0.08);
+    else if (reason === "own") { tone(230, 0.24, "square", 0.07); tone(160, 0.30, "square", 0.05, 0.05); }
+    else { tone(180, 0.30, "sawtooth", 0.08); tone(120, 0.35, "square", 0.05, 0.04); }
+  }
+  function sfxScore() { tone(880, 0.09, "sine", 0.05); tone(1320, 0.14, "sine", 0.04, 0.08); }
+  function sfxWin() { [523, 659, 784, 1047].forEach(function (f, i) { tone(f, 0.22, "triangle", 0.06, i * 0.12); }); }
+
+  // ---------- 地图 ----------
+  function farFromSpawns(x, y) {
+    for (let i = 0; i < SPAWNS.length; i++) {
+      const d = Math.abs(SPAWNS[i].x - x) + Math.abs(SPAWNS[i].y - y);
+      if (d < 6) return false;
+    }
+    return true;
+  }
+
+  function setupMap() {
+    obstacleGrid = new Uint8Array(COLS * ROWS);
+    obstacleCells = [];
+    boundary = { minX: 0, maxX: COLS - 1, minY: 0, maxY: ROWS - 1 };
+    nextShrinkAt = gameTime + SHRINK_INTERVAL;
+
+    if (activeMapType === "obstacle") {
+      // 五组实体掩体：中心核心 + 四个象限，每组 4~5 格，形成真正的通道地形
+      const shapes = [
+        [[0, 0], [1, 0], [2, 0], [3, 0]],
+        [[0, 0], [0, 1], [0, 2], [0, 3]],
+        [[0, 0], [0, 1], [1, 1], [2, 1]],
+        [[0, 0], [1, 0], [0, 1], [1, 1]],
+        [[1, 0], [0, 1], [1, 1], [2, 1], [1, 2]]
+      ];
+      const zones = [
+        { x0: 17, x1: 21, y0: 12, y1: 16 },
+        { x0: 10, x1: 15, y0: 8, y1: 12 },
+        { x0: 24, x1: 29, y0: 7, y1: 12 },
+        { x0: 10, x1: 15, y0: 18, y1: 23 },
+        { x0: 24, x1: 29, y0: 18, y1: 22 }
+      ];
+      function tryPlaceWall(ox, oy, shape) {
+        const cells = [];
+        for (let k = 0; k < shape.length; k++) {
+          const x = ox + shape[k][0], y = oy + shape[k][1];
+          if (x < 2 || x > COLS - 3 || y < 2 || y > ROWS - 3) return false;
+          if (!farFromSpawns(x, y)) return false;
+          if (obstacleGrid[idx(x, y)]) return false;
+          cells.push({ x: x, y: y });
+        }
+        for (let k = 0; k < cells.length; k++) {
+          obstacleGrid[idx(cells[k].x, cells[k].y)] = 1;
+          obstacleCells.push(cells[k]);
+        }
+        return true;
+      }
+      for (let z = 0; z < zones.length; z++) {
+        const zone = zones[z];
+        for (let attempt = 0; attempt < 200; attempt++) {
+          const shape = shapes[Math.floor(Math.random() * shapes.length)];
+          const ox = zone.x0 + Math.floor(Math.random() * (zone.x1 - zone.x0 + 1));
+          const oy = zone.y0 + Math.floor(Math.random() * (zone.y1 - zone.y0 + 1));
+          if (tryPlaceWall(ox, oy, shape)) break;
+        }
+      }
+    }
+  }
+
+  // ---------- 回合 / 赛制 ----------
+  function makePlayer(id, score) {
+    const sp = SPAWNS[id - 1];
+    return {
+      id: id,
+      x: sp.x, y: sp.y,
+      dir: { x: sp.dir.x, y: sp.dir.y },
+      queuedDir: null,
+      queuedAt: -1e9,
+      alive: true,
+      score: score,
+      acc: 0,
+      speedT: 0,
+      interval: BASE_SPEED,
+      boostUntil: 0,
+      phaseCharges: 0,
+      shieldUntil: 0,
+      shieldCharges: 0,
+      aiNextAt: 0,
+      aiPlan: null
+    };
+  }
+
+  function resetRound() {
+    grid.fill(0);
+    trailTime.fill(-1e9);
+    powerups = [];
+    particles = [];
+    floaters = [];
+    tickAcc = 0;
+    roundCrashes = [null, null];
+    roundNote = "";
+    powerupCycleIndex = -1;
+
+    const scores = players.length ? [players[0].score, players[1].score] : [0, 0];
+    players = [makePlayer(1, scores[0]), makePlayer(2, scores[1])];
+    setupMap();
+
+    const t = gameTime;
+    for (let i = 0; i < 2; i++) {
+      const c = idx(players[i].x, players[i].y);
+      grid[c] = players[i].id;
+      trailTime[c] = t;
+    }
+
+    currentReplay = {
+      mapType: activeMapType,
+      obstacles: obstacleCells.map(function (o) { return { x: o.x, y: o.y }; }),
+      frames: []
+    };
+    gameState = "playing";
+    nextPowerupAt = gameTime + 4500;
+    updateHUD(true, true);
+  }
+
+  function newMatch(wins) {
+    if (wins) targetWins = wins;
+    players = [];
+    roundIndex = 1;
+    fhintEl.textContent = "先胜 " + targetWins + " 局者获胜";
+    mapHintEl.textContent = MAP_NAMES[activeMapType];
+    for (let i = 0; i < fmtBtns.length; i++) {
+      fmtBtns[i].classList.toggle("active", Number(fmtBtns[i].dataset.wins) === targetWins);
+    }
+    resetRound();
+    btnPause.textContent = "暂停 (P)";
+    updateTitles();
+  }
+
+  const DIFF_NAMES = { easy: "菜鸟", normal: "普通", hard: "高手", hell: "地狱" };
+  function updateTitles() {
+    if (aiVsAi) {
+      p1Title.textContent = "AI · " + DIFF_NAMES[aiDifficulty1];
+      p1Title.classList.add("p2badge");
+      p1Keys.textContent = "电脑操控";
+      p2Title.textContent = "AI · " + DIFF_NAMES[aiDifficulty];
+      p2Title.classList.add("p2badge");
+      p2Keys.textContent = "电脑操控";
+    } else {
+      p1Title.textContent = "玩家 1";
+      p1Title.classList.remove("p2badge");
+      p1Keys.textContent = "W A S D";
+      if (vsAI) {
+        p2Title.textContent = "AI · " + DIFF_NAMES[aiDifficulty];
+        p2Title.classList.add("p2badge");
+        p2Keys.textContent = "电脑操控";
+      } else {
+        p2Title.textContent = "玩家 2";
+        p2Title.classList.remove("p2badge");
+        p2Keys.textContent = "↑ ← ↓ →";
+      }
+    }
+  }
+  // 根据模式显示/隐藏难度选择区
+  function updateDiffUI() {
+    const isPvp = selectedMode === "pvp";
+    const isAiDuel = selectedMode === "aivai";
+    diffRow.style.display = isPvp ? "none" : "flex";
+    diff1Seg.style.display = isAiDuel ? "inline-flex" : "none";
+    diffLabelP1.style.display = isAiDuel ? "" : "none";
+    diffLabelP2.textContent = isAiDuel ? "玩家 2" : "AI 难度";
+  }
+
+  // ---------- 菜单 / 赛制按钮 ----------
+  for (let i = 0; i < fmtBtns.length; i++) {
+    fmtBtns[i].addEventListener("click", function () { newMatch(Number(this.dataset.wins)); });
+  }
+  for (let i = 0; i < modeBtns.length; i++) {
+    modeBtns[i].addEventListener("click", function () {
+      selectedMode = this.dataset.mode;
+      for (let k = 0; k < modeBtns.length; k++) modeBtns[k].classList.toggle("active", modeBtns[k] === this);
+      updateDiffUI();
+    });
+  }
+  for (let i = 0; i < diffBtns.length; i++) {
+    diffBtns[i].addEventListener("click", function () {
+      aiDifficulty = this.dataset.diff;
+      for (let k = 0; k < diffBtns.length; k++) diffBtns[k].classList.toggle("active", diffBtns[k] === this);
+    });
+  }
+  for (let i = 0; i < diff1Btns.length; i++) {
+    diff1Btns[i].addEventListener("click", function () {
+      aiDifficulty1 = this.dataset.diff;
+      for (let k = 0; k < diff1Btns.length; k++) diff1Btns[k].classList.toggle("active", diff1Btns[k] === this);
+    });
+  }
+  for (let i = 0; i < mapBtns.length; i++) {
+    mapBtns[i].addEventListener("click", function () {
+      selectedMap = this.dataset.map;
+      for (let k = 0; k < mapBtns.length; k++) mapBtns[k].classList.toggle("active", mapBtns[k] === this);
+    });
+  }
+  document.getElementById("btnStart").addEventListener("click", function () {
+    initAudio();
+    activeMapType = selectedMap;
+    vsAI = (selectedMode === "pve" || selectedMode === "aivai");
+    aiVsAi = (selectedMode === "aivai");
+    menuPanel.classList.add("hidden");
+    newMatch(targetWins);
+  });
+  btnMenu.addEventListener("click", function () {
+    if (gameState === "replay") exitReplay();
+    gameState = "menu";
+    menuPanel.classList.remove("hidden");
+    btnPause.textContent = "暂停 (P)";
+  });
+  btnReset.addEventListener("click", function () { newMatch(targetWins); });
+
+  // ---------- 输入缓冲 ----------
+  function setDir(p, nd) {
+    if (!p || !p.alive) return;
+    if (p.queuedDir && p.queuedDir.x === nd.x && p.queuedDir.y === nd.y) return;
+    p.queuedDir = { x: nd.x, y: nd.y };
+    p.queuedAt = gameTime;
+  }
+  function consumeInput(p) {
+    let dir = p.dir;
+    if (p.queuedDir) {
+      const fresh = (gameTime - p.queuedAt) <= INPUT_BUFFER_MS;
+      if (fresh) {
+        const nd = p.queuedDir;
+        const reverse = (nd.x === -p.dir.x && nd.y === -p.dir.y);
+        if (!reverse || p.phaseCharges > 0) dir = nd;
+      }
+      p.queuedDir = null;
+    }
+    return dir;
+  }
+
+  // ---------- AI 陪练引擎 ----------
+  // 思路：对每个候选方向做一次"会撞就止步"的洪水填充，估算可活动空间；
+  // 空间越大越安全。再叠加顺路道具、贴边惩罚、向对手逼近的进攻分。
+  // AI 只通过 setDir 下发意图，走与真人完全一致的缓冲 + 对称裁决通道。
+
+  // 洪水填充：从 (sx,sy) 出发，统计在不撞轨迹/障碍/边界的前提下能到达的格子数。
+  // blockA/blockB 视为临时障碍（用于模拟"走完这步后"的局面：自己原头部、对手头部）。
+  // 返回 { count, stamp }；stamp 标记本次访问集，用于判断与对手是否仍连通。
+  const aiVisited = new Uint32Array(COLS * ROWS);
+  let aiStamp = 0;
+
+  // Voronoi 领地：从双方头部同时做多源 BFS，每个空格归"先到达"的一方。
+  // 轨迹/障碍会挡路，所以它比纯曼哈顿距离更贴近真实的空间争夺——
+  // 这是光轮 AI 的核心：即便在开阔区，也能判断往哪走能圈到更多地盘、压缩对手。
+  const vorOwner = new Int8Array(COLS * ROWS);
+  const vorQueue = new Int32Array(COLS * ROWS);
+  function computeVoronoi(myHead, foeHead) {
+    vorOwner.fill(0);
+    let qh = 0, qt = 0;
+    if (myHead >= 0) { vorQueue[qt++] = myHead; vorOwner[myHead] = 1; }
+    if (foeHead >= 0) { vorQueue[qt++] = foeHead; vorOwner[foeHead] = -1; }
+    while (qh < qt) {
+      const c = vorQueue[qh++];
+      const x = c % COLS, y = (c - x) / COLS;
+      const owner = vorOwner[c];
+      for (let d = 0; d < 4; d++) {
+        const nx = x + AI_DIRS[d].x, ny = y + AI_DIRS[d].y;
+        if (nx < boundary.minX || nx > boundary.maxX || ny < boundary.minY || ny > boundary.maxY) continue;
+        const ni = ny * COLS + nx;
+        if (vorOwner[ni] !== 0) continue;
+        if (grid[ni] !== 0 || obstacleGrid[ni] !== 0) continue;
+        vorOwner[ni] = owner;
+        vorQueue[qt++] = ni;
+      }
+    }
+    let mine = 0, foe = 0;
+    for (let i = 0; i < vorOwner.length; i++) {
+      if (vorOwner[i] === 1) mine++;
+      else if (vorOwner[i] === -1) foe++;
+    }
+    return { mine: mine, foe: foe };
+  }
+
+  function aiFlood(sx, sy, cap, blockA, blockB) {
+    aiStamp++;
+    const stamp = aiStamp;
+    const stack = [sy * COLS + sx];
+    aiVisited[stack[0]] = stamp;
+    let count = 0;
+    while (stack.length && count < cap) {
+      const c = stack.pop();
+      count++;
+      const x = c % COLS, y = (c - x) / COLS;
+      for (let d = 0; d < 4; d++) {
+        const nx = x + AI_DIRS[d].x, ny = y + AI_DIRS[d].y;
+        if (nx < boundary.minX || nx > boundary.maxX || ny < boundary.minY || ny > boundary.maxY) continue;
+        const ni = ny * COLS + nx;
+        if (ni === blockA || ni === blockB) continue;
+        if (aiVisited[ni] === stamp) continue;
+        if (grid[ni] !== 0 || obstacleGrid[ni] !== 0) continue;
+        aiVisited[ni] = stamp;
+        stack.push(ni);
+      }
+    }
+    return { count: count, stamp: stamp };
+  }
+
+  // 单步是否致命（沿用 classify 的判定口径）；phase > 0 可穿轨迹，shield 可兜底一次
+  function aiFatal(p, nx, ny, foe) {
+    if (nx < boundary.minX || nx > boundary.maxX || ny < boundary.minY || ny > boundary.maxY) {
+      return p.shieldCharges > 0 && gameTime < p.shieldUntil ? "soft" : "hard";
+    }
+    if (obstacleGrid[ny * COLS + nx]) {
+      return p.shieldCharges > 0 && gameTime < p.shieldUntil ? "soft" : "hard";
+    }
+    const cell = grid[ny * COLS + nx];
+    if (cell !== 0) {
+      if (p.phaseCharges > 0) return "phase";
+      return p.shieldCharges > 0 && gameTime < p.shieldUntil ? "soft" : "hard";
+    }
+    if (foe && foe.alive && foe.x === nx && foe.y === ny) {
+      if (p.phaseCharges > 0) return "phase";
+      return p.shieldCharges > 0 && gameTime < p.shieldUntil ? "soft" : "hard";
+    }
+    return null;
+  }
+
+  // ---------- 地狱级 AI：对抗搜索 ----------
+  // 普通 AI 只看"走这一步之后"的静态局面；地狱 AI 把双方接下来的若干步
+  // 都展开成一棵博弈树，用 α-β 剪枝 + 迭代加深搜索，并假设对手每一步都最优。
+  // 局面评估 = Voronoi 领地差 + 可达空间 + 出口自由度 + 区域紧凑度。
+  const SIM_N = COLS * ROWS;
+  const simGrid = new Uint8Array(SIM_N);   // 0 空 / 1 我方轨迹 / 2 对手轨迹 / 3 障碍
+  const simVisit = new Uint32Array(SIM_N);
+  const simOwner = new Uint8Array(SIM_N);
+  const simQueue = new Int32Array(SIM_N);
+  let simStamp = 0;
+  let searchNodes = 0;
+  let searchDeadline = 0;
+  let searchAborted = false;
+
+  function dirIndexOf(d) {
+    if (d.x === 0) return d.y < 0 ? 0 : 2;
+    return d.x > 0 ? 1 : 3;
+  }
+
+  function simBuild(p, foe) {
+    for (let i = 0; i < SIM_N; i++) {
+      const v = grid[i];
+      simGrid[i] = obstacleGrid[i] ? 3 : (v === p.id ? 1 : (v === foe.id ? 2 : 0));
+    }
+  }
+
+  // 多源 BFS：双方头部同时扩张，空格归先到达的一方。
+  // 顺带统计"周长"（可达格贴墙/贴轨迹的边数），用于衡量区域是否紧凑。
+  function simVoronoi(mx, my, fx, fy, stamp) {
+    let qh = 0, qt = 0;
+    const m0 = my * COLS + mx;
+    simVisit[m0] = stamp; simOwner[m0] = 1; simQueue[qt++] = m0;
+    const f0 = fy * COLS + fx;
+    if (f0 !== m0) { simVisit[f0] = stamp; simOwner[f0] = 2; simQueue[qt++] = f0; }
+    while (qh < qt) {
+      const c = simQueue[qh++];
+      const x = c % COLS, y = (c - x) / COLS;
+      const own = simOwner[c];
+      for (let d = 0; d < 4; d++) {
+        const nx = x + AI_DIRS[d].x, ny = y + AI_DIRS[d].y;
+        if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS) continue;
+        const ni = ny * COLS + nx;
+        if (simVisit[ni] === stamp || simGrid[ni] !== 0) continue;
+        simVisit[ni] = stamp; simOwner[ni] = own; simQueue[qt++] = ni;
+      }
+    }
+    let mine = 0, foe = 0, mp = 0, fp = 0;
+    for (let k = 0; k < qt; k++) {
+      const c = simQueue[k];
+      const x = c % COLS, y = (c - x) / COLS;
+      const own = simOwner[c];
+      let perim = 0;
+      for (let d = 0; d < 4; d++) {
+        const nx = x + AI_DIRS[d].x, ny = y + AI_DIRS[d].y;
+        if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS || simGrid[ny * COLS + nx] !== 0) perim++;
+      }
+      if (own === 1) { mine++; mp += perim; }
+      else { foe++; fp += perim; }
+    }
+    return { mine: mine, foe: foe, mp: mp, fp: fp };
+  }
+
+  function simFree(x, y) {
+    let n = 0;
+    for (let d = 0; d < 4; d++) {
+      const nx = x + AI_DIRS[d].x, ny = y + AI_DIRS[d].y;
+      if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS) continue;
+      if (simGrid[ny * COLS + nx] === 0) n++;
+    }
+    return n;
+  }
+
+  function spEval(mdi, fdi, mx, my, fx, fy, ply) {
+    simStamp++;
+    const v = simVoronoi(mx, my, fx, fy, simStamp);
+    const myFree = simFree(mx, my);
+    const foeFree = simFree(fx, fy);
+    if (myFree === 0) return -1e7 + ply;
+    if (foeFree === 0) return 1e7 - ply;
+    // 领地差是决定性指标；紧凑度奖励"贴着墙/轨迹走"，把空间留得更完整
+    let s = (v.mine - v.foe) * 3.2;
+    s += (v.mine + v.foe) * 0.06;
+    s += (myFree - foeFree) * 2.5;
+    s += (v.fp / Math.sqrt(v.foe + 1) - v.mp / Math.sqrt(v.mine + 1)) * 3;
+    // 极轻微的"保持前进方向"偏好，避免无意义原地绕圈交由走法顺序处理
+    return s;
+  }
+
+  // turn: 1=我方走, 2=对手走；交替展开，α-β 剪枝
+  function spSearch(turn, mdi, mx, my, fdi, fx, fy, depth, alpha, beta, ply) {
+    if ((++searchNodes & 63) === 0 && performance.now() > searchDeadline) { searchAborted = true; return 0; }
+    if (depth <= 0) return spEval(mdi, fdi, mx, my, fx, fy, ply);
+    const isMe = turn === 1;
+    const cx = isMe ? mx : fx, cy = isMe ? my : fy, cd = isMe ? mdi : fdi;
+    const order0 = cd;
+    let best = isMe ? -Infinity : Infinity;
+    let any = false;
+    for (let k = 0; k < 3; k++) {
+      const di = k === 0 ? order0 : (k === 1 ? ((order0 + 3) & 3) : ((order0 + 1) & 3));
+      const nd = AI_DIRS[di];
+      const nx = cx + nd.x, ny = cy + nd.y;
+      if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS) continue;
+      const ci = ny * COLS + nx;
+      if (simGrid[ci] !== 0) continue;
+      simGrid[ci] = isMe ? 1 : 2;
+      any = true;
+      const val = isMe
+        ? spSearch(2, di, nx, ny, fdi, fx, fy, depth - 1, alpha, beta, ply + 1)
+        : spSearch(1, mdi, mx, my, di, nx, ny, depth - 1, alpha, beta, ply + 1);
+      simGrid[ci] = 0;
+      if (searchAborted) return 0;
+      if (isMe) {
+        if (val > best) best = val;
+        if (best > alpha) alpha = best;
+      } else {
+        if (val < best) best = val;
+        if (best < beta) beta = best;
+      }
+      if (alpha >= beta) break;
+    }
+    if (!any) return isMe ? (-1e7 + ply) : (1e7 - ply);
+    return best;
+  }
+
+  function aiDecideSearch(p, cfg) {
+    const foe = players[1 - (p.id - 1)];
+    if (!foe || !foe.alive) { aiDecideGreedy(p, cfg); return; }
+    simBuild(p, foe);
+
+    const myDi = dirIndexOf(p.dir), foeDi = dirIndexOf(foe.dir);
+    const order = [myDi, (myDi + 3) & 3, (myDi + 1) & 3];
+    const bonus = [0, 0, 0];
+    const early = trailLen(p.id) < 20;
+
+    for (let k = 0; k < 3; k++) {
+      const nd = AI_DIRS[order[k]];
+      const nx = p.x + nd.x, ny = p.y + nd.y;
+      if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS ||
+          simGrid[ny * COLS + nx] !== 0 ||
+          (nd.x === -p.dir.x && nd.y === -p.dir.y && p.phaseCharges <= 0)) {
+        bonus[k] = -1e9;
+        continue;
+      }
+      let b = 0;
+      for (let j = 0; j < powerups.length; j++) {
+        const u = powerups[j];
+        const before = Math.abs(p.x - u.x) + Math.abs(p.y - u.y);
+        const after = Math.abs(nx - u.x) + Math.abs(ny - u.y);
+        if (after < before) b += u.type === "boost" ? 4 : 8;
+        if (after === 0) b += 12;
+      }
+      // 开局先贴边，把中间的大片空间留给后续切割
+      if (early) b -= Math.min(nx, COLS - 1 - nx, ny, ROWS - 1 - ny) * 1.2;
+      bonus[k] = b;
+    }
+
+    searchDeadline = performance.now() + (cfg.searchMs || 24);
+    searchNodes = 0;
+    let bestDi = -1, bestVal = -Infinity;
+
+    for (let depth = 2; depth <= 12; depth++) {
+      searchAborted = false;
+      let layerDi = -1, layerVal = -Infinity, complete = true;
+      for (let k = 0; k < 3; k++) {
+        if (bonus[k] <= -1e8) continue;
+        const di = order[k], nd = AI_DIRS[di];
+        const nx = p.x + nd.x, ny = p.y + nd.y;
+        const ci = ny * COLS + nx;
+        simGrid[ci] = 1;
+        const val = spSearch(2, di, nx, ny, foeDi, foe.x, foe.y, depth - 1, -Infinity, Infinity, 1);
+        simGrid[ci] = 0;
+        if (searchAborted) { complete = false; break; }
+        const total = val + bonus[k];
+        if (total > layerVal) { layerVal = total; layerDi = di; }
+      }
+      if (!complete) break;
+      if (layerDi >= 0) { bestDi = layerDi; bestVal = layerVal; }
+      if (bestVal > 1e6 || performance.now() > searchDeadline) break;
+    }
+
+    if (bestDi < 0) { aiDecideGreedy(p, cfg); return; }
+    setDir(p, AI_DIRS[bestDi]);
+  }
+
+  function aiDecide(p) {
+    if (!p || !p.alive || gameState !== "playing") return;
+    const cfg = AI_CFG[p.id === 1 ? aiDifficulty1 : aiDifficulty] || AI_CFG.normal;
+    if (cfg.brain === "search") aiDecideSearch(p, cfg);
+    else aiDecideGreedy(p, cfg);
+  }
+
+  function aiDecideGreedy(p, cfg) {
+    if (gameTime < p.aiNextAt) return;
+    p.aiNextAt = gameTime + cfg.react;
+
+    const foe = players[1 - (p.id - 1)];
+    const foeAlive = foe && foe.alive;
+    const myHead = p.y * COLS + p.x;
+    const foeHead = foeAlive ? foe.y * COLS + foe.x : -1;
+    const span = Math.max(boundary.maxX - boundary.minX, boundary.maxY - boundary.minY);
+    const total = COLS * ROWS;
+    const scale = span * 0.4;
+
+    let best = null, bestScore = -Infinity;
+    for (let d = 0; d < 4; d++) {
+      const nd = AI_DIRS[d];
+      const reverse = (nd.x === -p.dir.x && nd.y === -p.dir.y);
+      // 无瞬转时不能掉头（和 consumeInput 的规则一致）
+      if (reverse && p.phaseCharges <= 0) continue;
+
+      const nx = p.x + nd.x, ny = p.y + nd.y;
+      const fatal = aiFatal(p, nx, ny, foe);
+      if (fatal === "hard") continue;
+
+      // 落脚点本身是轨迹/障碍时，空间从下一格估算（穿过去之后）
+      let seedX = nx, seedY = ny;
+      if (fatal === "phase" || fatal === "soft") {
+        seedX = nx + nd.x; seedY = ny + nd.y;
+        if (seedX < boundary.minX || seedX > boundary.maxX || seedY < boundary.minY || seedY > boundary.maxY) {
+          seedX = nx; seedY = ny;
+        }
+      }
+      const seedHead = seedY * COLS + seedX;
+
+      // ① 可达空间：把当前头部当墙，避免把回头路算进来
+      const mine = aiFlood(seedX, seedY, total, myHead, -1);
+      const reach = mine.count;
+
+      // ② 分离判断：对手头部本身是轨迹，直接查它永远不连通；
+      //    改查它的四个邻格——只要有一个落在我可达域内，就仍共享空间。
+      let separated = true;
+      if (foeAlive) {
+        for (let k = 0; k < 4; k++) {
+          const ax = foe.x + AI_DIRS[k].x, ay = foe.y + AI_DIRS[k].y;
+          if (ax < boundary.minX || ax > boundary.maxX || ay < boundary.minY || ay > boundary.maxY) continue;
+          if (aiVisited[ay * COLS + ax] === mine.stamp) { separated = false; break; }
+        }
+      }
+
+      // ③ 落点出口数：<=1 就是死胡同，钻进去必被围死
+      let free = 0;
+      for (let k = 0; k < 4; k++) {
+        const ax = seedX + AI_DIRS[k].x, ay = seedY + AI_DIRS[k].y;
+        if (ax < boundary.minX || ax > boundary.maxX || ay < boundary.minY || ay > boundary.maxY) continue;
+        const ai = ay * COLS + ax;
+        if (ai === myHead) continue;
+        if (grid[ai] === 0 && obstacleGrid[ai] === 0) free++;
+      }
+
+      let score;
+      if (separated && foeAlive) {
+        // 已分家：比拼真实地盘，越大越好且要明显压过对手
+        const foeReach = aiFlood(foe.x, foe.y, total, -1, -1).count;
+        score = (reach - foeReach) * 2.2 + reach * 0.3;
+      } else if (cfg.voronoi > 0 && foeAlive) {
+        // 同一片共享区：Voronoi 领地差是核心，可达空间兜底防止把自己困死
+        const vor = computeVoronoi(seedHead, foeHead);
+        score = (vor.mine - vor.foe) * 1.4 * cfg.voronoi + reach * 0.22;
+      } else {
+        // 菜鸟：只看可达空间
+        score = reach;
+      }
+
+      // 贴墙切割：开阔区靠墙/靠轨迹走，把空间切成对自己有利的形状。
+      // 有出口富余时才生效，避免沿墙画圈把自己绕死。
+      if (cfg.hug > 0 && free >= 2) {
+        let hug = 0;
+        for (let k = 0; k < 4; k++) {
+          const ax = nx + AI_DIRS[k].x, ay = ny + AI_DIRS[k].y;
+          if (ax < boundary.minX || ax > boundary.maxX || ay < boundary.minY || ay > boundary.maxY) { hug += 1.4; continue; }
+          const ai = ay * COLS + ax;
+          if (obstacleGrid[ai]) hug += 1.2;
+          else if (grid[ai] === p.id) hug += 0.7;
+          else if (grid[ai] !== 0) hug += 0.4;
+        }
+        score += hug * scale * 0.5 * cfg.hug;
+      }
+
+      // 出口越多越好，杜绝钻进轨迹堆把路越走越窄
+      score += free * (span * 0.22);
+
+      // 致命但可解：重罚
+      if (fatal) score -= total * cfg.risk;
+      // 掉头惩罚
+      if (reverse) score -= total * 0.25;
+      // 死胡同预警
+      if (free <= 1) score -= total * 0.45;
+      else if (free === 2) score -= total * 0.05;
+
+      // 顺路道具：生存类（护盾/瞬转）权重更高
+      for (let k = 0; k < powerups.length; k++) {
+        const u = powerups[k];
+        const before = Math.abs(p.x - u.x) + Math.abs(p.y - u.y);
+        const after = Math.abs(nx - u.x) + Math.abs(ny - u.y);
+        const w = u.type === "boost" ? 0.5 : 0.9;
+        if (after < before) score += scale * w * (0.3 + cfg.chase);
+        if (after === 0) score += scale * w * 2 * (0.3 + cfg.chase);
+      }
+
+      // 进攻：共享空间时朝对手逼近争地盘
+      if (foeAlive && !separated && cfg.chase > 0.5) {
+        const fd = Math.abs(nx - foe.x) + Math.abs(ny - foe.y);
+        score += Math.max(0, span * 0.5 - fd) * 0.12 * cfg.chase;
+      }
+
+      // 失误：按难度概率注入随机扰动，菜鸟会明显走歪
+      if (cfg.mistake > 0 && Math.random() < cfg.mistake) score -= Math.random() * total * 0.5;
+      score += Math.random() * 0.5;
+
+      if (score > bestScore) { bestScore = score; best = nd; }
+    }
+
+    if (best) {
+      p.aiPlan = best;
+      setDir(p, best);
+    }
+  }
+
+  window.addEventListener("keydown", function (e) {
+    initAudio();
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].indexOf(e.key) >= 0) e.preventDefault();
+    if (gameState === "menu") {
+      if (e.key === "Enter") document.getElementById("btnStart").click();
+      return;
+    }
+    if (gameState === "replay") {
+      if (e.key === "Escape") exitReplay();
+      else if (e.key === " ") { e.preventDefault(); stepReplay(); }
+      return;
+    }
+    if (e.key === "p" || e.key === "P") { togglePause(); return; }
+    if (e.key === "r" || e.key === "R") { if (gameState === "gameOver") newMatch(targetWins); return; }
+    if (gameState !== "playing") return;
+
+    const k = e.key.toLowerCase();
+    if (!aiVsAi) {
+      if (k === "w") setDir(players[0], { x: 0, y: -1 });
+      else if (k === "a") setDir(players[0], { x: -1, y: 0 });
+      else if (k === "s") setDir(players[0], { x: 0, y: 1 });
+      else if (k === "d") setDir(players[0], { x: 1, y: 0 });
+    }
+    if (!vsAI) {
+      if (e.key === "ArrowUp") setDir(players[1], { x: 0, y: -1 });
+      else if (e.key === "ArrowLeft") setDir(players[1], { x: -1, y: 0 });
+      else if (e.key === "ArrowDown") setDir(players[1], { x: 0, y: 1 });
+      else if (e.key === "ArrowRight") setDir(players[1], { x: 1, y: 0 });
+    }
+  });
+
+  function togglePause() {
+    if (gameState === "playing") gameState = "paused";
+    else if (gameState === "paused") gameState = "playing";
+    btnPause.textContent = gameState === "paused" ? "继续 (P)" : "暂停 (P)";
+  }
+  btnPause.addEventListener("click", togglePause);
+
+  // ---------- 特效 ----------
+  function spawnBurst(x, y, color) {
+    const cx = x * CELL + CELL / 2;
+    const cy = y * CELL + CELL / 2;
+    for (let i = 0; i < 26; i++) {
+      const a = Math.random() * TAU;
+      const sp = 1.5 + Math.random() * 4;
+      particles.push({
+        x: cx, y: cy,
+        vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+        r: 1.5 + Math.random() * 2.5,
+        life: 1, color: color
+      });
+    }
+  }
+  function addFloater(text, x, y, color) {
+    floaters.push({ text: text, x: x * CELL + CELL / 2, y: y * CELL + CELL / 2, life: 1, color: color });
+  }
+  function crash(p, reason) {
+    p.alive = false;
+    roundCrashes[p.id - 1] = reason;
+    spawnBurst(p.x, p.y, COLORS[p.id - 1].main);
+    addFloater(CRASH_SHORT[reason] || "出局!", p.x, p.y, COLORS[p.id - 1].main);
+    sfxCrash(reason);
+  }
+
+  // ---------- 道具 ----------
+  function applyPowerup(p, u) {
+    if (u.type === "boost") {
+      p.boostUntil = gameTime + 3000;
+      addFloater("⚡ 疾速!", p.x, p.y, "#fbbf24");
+    } else if (u.type === "phase") {
+      p.phaseCharges = Math.min(p.phaseCharges + 1, 2);
+      addFloater("🌀 瞬转!", p.x, p.y, "#a78bfa");
+    } else {
+      p.shieldUntil = gameTime + SHIELD_MS;
+      p.shieldCharges = 1;
+      addFloater("🛡 护盾!", p.x, p.y, "#60a5fa");
+    }
+    sfxPick(u.type);
+  }
+
+  function spawnPowerup(collector) {
+    const empties = [];
+    for (let y = boundary.minY + 1; y < boundary.maxY; y++) {
+      for (let x = boundary.minX + 1; x < boundary.maxX; x++) {
+        const ci = idx(x, y);
+        if (grid[ci] !== 0 || obstacleGrid[ci] !== 0) continue;
+        let bad = false;
+        for (let i = 0; i < players.length; i++) {
+          if (players[i].x === x && players[i].y === y) { bad = true; break; }
+        }
+        if (bad) continue;
+        for (let i = 0; i < powerups.length; i++) {
+          if (powerups[i].x === x && powerups[i].y === y) { bad = true; break; }
+        }
+        if (bad) continue;
+        empties.push({ x: x, y: y });
+      }
+    }
+    if (!empties.length) return;
+    const c = empties[Math.floor(Math.random() * empties.length)];
+    // 严格循环：疾速 → 瞬转 → 护盾 → 疾速 …
+    powerupCycleIndex = (powerupCycleIndex + 1) % POWERUP_CYCLE.length;
+    const type = POWERUP_CYCLE[powerupCycleIndex];
+    powerups.push({ x: c.x, y: c.y, type: type, born: gameTime });
+    if (collector) collector.push({ type: type, x: c.x, y: c.y });
+  }
+
+  function trailLen(id) {
+    let n = 0;
+    for (let i = 0; i < grid.length; i++) if (grid[i] === id) n++;
+    return n;
+  }
+
+  // ---------- 对称判定 ----------
+  function classify(i, intents, bothMove) {
+    const p = players[i];
+    const it = intents[i];
+    const nx = it.nx, ny = it.ny;
+    if (nx < boundary.minX || nx > boundary.maxX || ny < boundary.minY || ny > boundary.maxY) return { reason: "edge" };
+    if (obstacleGrid[idx(nx, ny)]) return { reason: "obstacle" };
+
+    const j = 1 - i;
+    if (bothMove) {
+      if (intents[j].nx === nx && intents[j].ny === ny) return { reason: "head" };
+      if (intents[j].nx === p.x && intents[j].ny === p.y &&
+          nx === players[j].x && ny === players[j].y) return { reason: "head" };
+    }
+    const cell = grid[idx(nx, ny)];
+    if (cell !== 0) {
+      if (p.phaseCharges > 0) return { reason: null, phase: true };
+      return { reason: cell === p.id ? "own" : "enemy" };
+    }
+    if (players[j].alive && players[j].x === nx && players[j].y === ny) {
+      if (p.phaseCharges > 0) return { reason: null, phase: true };
+      return { reason: "enemy" };
+    }
+    return { reason: null };
+  }
+
+  function resolveMovers(movers, frame) {
+    const intents = [null, null];
+    for (let k = 0; k < movers.length; k++) {
+      const i = movers[k];
+      const dir = consumeInput(players[i]);
+      players[i].dir = dir;
+      intents[i] = { nx: players[i].x + dir.x, ny: players[i].y + dir.y, dx: dir.x, dy: dir.y };
+    }
+    const bothMove = (movers.length === 2);
+
+    const results = [null, null];
+    for (let k = 0; k < movers.length; k++) {
+      const i = movers[k];
+      results[i] = classify(i, intents, bothMove);
+    }
+
+    // 瞬转（主动）优先于护盾（被动兜底）
+    for (let i = 0; i < 2; i++) {
+      if (results[i] && results[i].phase) {
+        players[i].phaseCharges--;
+        spawnBurst(intents[i].nx, intents[i].ny, "#a78bfa");
+        addFloater("穿!", intents[i].nx, intents[i].ny, "#a78bfa");
+        tone(700, 0.07, "triangle", 0.04);
+      }
+    }
+    // 护盾：3 秒内自动抵消一次碰撞，触发即消失
+    for (let k = 0; k < movers.length; k++) {
+      const i = movers[k];
+      const r = results[i];
+      if (!r || !r.reason) continue;
+      const p = players[i];
+      if (p.shieldCharges > 0 && gameTime < p.shieldUntil) {
+        p.shieldCharges = 0;
+        p.shieldUntil = 0;
+        r.reason = null;
+        r.shielded = true;
+        spawnBurst(intents[i].nx, intents[i].ny, "#60a5fa");
+        addFloater("格挡!", intents[i].nx, intents[i].ny, "#60a5fa");
+        tone(520, 0.14, "sine", 0.06);
+      }
+    }
+
+    if (bothMove && results[0].reason && results[1].reason) {
+      const len = [trailLen(1), trailLen(2)];
+      if (len[0] === len[1]) {
+        roundNote = "同时碰撞 · 轨迹相当，本局平局重赛";
+      } else {
+        const w = len[0] > len[1] ? 0 : 1;
+        results[w].survived = true;
+        results[w].reason = null;
+        roundNote = "同时碰撞 · 玩家 " + (w + 1) + " 轨迹更长，判定获胜";
+        addFloater("判胜", intents[w].nx, intents[w].ny, COLORS[w].main);
+      }
+    }
+
+    for (let k = 0; k < movers.length; k++) {
+      const i = movers[k];
+      const p = players[i];
+      const r = results[i];
+      const ev = {
+        i: i, x: p.x, y: p.y,
+        dx: intents[i].dx, dy: intents[i].dy,
+        reason: r.reason || null,
+        shielded: !!r.shielded,
+        survived: !!r.survived
+      };
+      if (r.reason) { crash(p, r.reason); frame.moves.push(ev); continue; }
+      if (r.survived) { frame.moves.push(ev); continue; }
+      p.x = intents[i].nx;
+      p.y = intents[i].ny;
+      ev.x = p.x;
+      ev.y = p.y;
+      const cellIdx = idx(p.x, p.y);
+      grid[cellIdx] = p.id;
+      trailTime[cellIdx] = gameTime;
+      frame.moves.push(ev);
+
+      const pi = powerups.findIndex(function (u) { return u.x === p.x && u.y === p.y; });
+      if (pi >= 0) {
+        const u = powerups[pi];
+        powerups.splice(pi, 1);
+        frame.pickups.push({ i: i, type: u.type, x: u.x, y: u.y });
+        applyPowerup(p, u);
+      }
+    }
+  }
+
+  function shrinkBoundary(frame) {
+    if (activeMapType !== "shrink") return;
+    if (gameTime < nextShrinkAt) return;
+    nextShrinkAt += SHRINK_INTERVAL;
+    if (boundary.maxX - boundary.minX < 11 || boundary.maxY - boundary.minY < 9) return;
+    boundary.minX += SHRINK_STEP;
+    boundary.maxX -= SHRINK_STEP;
+    boundary.minY += SHRINK_STEP;
+    boundary.maxY -= SHRINK_STEP;
+    frame.boundary = { minX: boundary.minX, maxX: boundary.maxX, minY: boundary.minY, maxY: boundary.maxY };
+    powerups = powerups.filter(function (u) {
+      return u.x >= boundary.minX && u.x <= boundary.maxX && u.y >= boundary.minY && u.y <= boundary.maxY;
+    });
+    addFloater("边界收缩!", COLS / 2, ROWS / 2, "#fb7185");
+    tone(320, 0.28, "sawtooth", 0.05);
+    for (let i = 0; i < 2; i++) {
+      const p = players[i];
+      if (!p.alive) continue;
+      if (p.x < boundary.minX || p.x > boundary.maxX || p.y < boundary.minY || p.y > boundary.maxY) {
+        crash(p, "shrink");
+        frame.deaths.push({ i: i, x: p.x, y: p.y, reason: "shrink" });
+      }
+    }
+  }
+
+  function doTick() {
+    const frame = { t: gameTime, moves: [], pickups: [], spawns: [], deaths: [], boundary: null };
+
+    for (let i = 0; i < 2; i++) {
+      const p = players[i];
+      if (!p.alive) continue;
+      const target = gameTime < p.boostUntil ? 1 : 0;
+      const ramp = target > p.speedT ? BOOST_RAMP_IN : BOOST_RAMP_OUT;
+      const diff = target - p.speedT;
+      if (diff !== 0) p.speedT += Math.min(Math.abs(diff), TICK / ramp) * (diff > 0 ? 1 : -1);
+      p.interval = BASE_SPEED + (BOOST_SPEED - BASE_SPEED) * smoothstep(p.speedT);
+    }
+
+    powerups = powerups.filter(function (u) { return gameTime - u.born < POWERUP_LIFE; });
+    if (gameTime >= nextPowerupAt) {
+      if (powerups.length < MAX_POWERUPS) spawnPowerup(frame.spawns);
+      nextPowerupAt = gameTime + 5000 + Math.random() * 3000;
+    }
+
+    shrinkBoundary(frame);
+
+    const movers = [];
+    for (let i = 0; i < 2; i++) {
+      const p = players[i];
+      if (!p.alive) continue;
+      p.acc += TICK;
+      if (p.acc >= p.interval) {
+        p.acc -= p.interval;
+        movers.push(i);
+      }
+    }
+    // AI 在自己移动的这一刻决策，方向立即被 consumeInput 消费，不受缓冲过期影响
+    if (aiVsAi && players[0] && players[0].alive && movers.indexOf(0) >= 0) aiDecide(players[0]);
+    if (vsAI && players[1] && players[1].alive && movers.indexOf(1) >= 0) aiDecide(players[1]);
+    if (movers.length) resolveMovers(movers, frame);
+    checkRoundEnd();
+
+    if (currentReplay &&
+        (frame.moves.length || frame.pickups.length || frame.spawns.length ||
+         frame.deaths.length || frame.boundary)) {
+      currentReplay.frames.push(frame);
+      // 致命帧可能在本帧才写入，回放按钮需按最新帧数重新判定
+      if (gameState === "roundOver") {
+        btnReplay.disabled = !(lastReplay && lastReplay.frames.length);
+      }
+    }
+  }
+
+  function checkRoundEnd() {
+    if (gameState !== "playing") return;
+    const a = players[0], b = players[1];
+    if (a.alive && b.alive) return;
+    if (!a.alive && !b.alive) roundNote = roundNote || "双方同时出局 · 本局平局重赛";
+    else {
+      const w = a.alive ? 0 : 1;
+      players[w].score++;
+      sfxScore();
+    }
+    gameState = "roundOver";
+    roundEndAt = gameTime;
+    lastReplay = currentReplay;
+    btnReplay.disabled = !lastReplay || !lastReplay.frames.length;
+    updateHUD(true, true);
+  }
+
+  // ---------- 回放 ----------
+  function makeReplayPlayer(id) {
+    const sp = SPAWNS[id - 1];
+    return {
+      id: id, x: sp.x, y: sp.y,
+      dir: { x: sp.dir.x, y: sp.dir.y },
+      queuedDir: null, alive: true,
+      speedT: 0, boostUntil: 0, phaseCharges: 0,
+      shieldUntil: 0, shieldCharges: 0
+    };
+  }
+
+  function buildReplayView(data) {
+    const view = {
+      mapType: data.mapType,
+      grid: new Uint8Array(COLS * ROWS),
+      trailTime: new Float32Array(COLS * ROWS),
+      obstacleGrid: new Uint8Array(COLS * ROWS),
+      boundary: { minX: 0, maxX: COLS - 1, minY: 0, maxY: ROWS - 1 },
+      players: [makeReplayPlayer(1), makeReplayPlayer(2)],
+      powerups: [],
+      // 帧时间戳是全局累加的 gameTime（并非每局从 0 开始），回放时钟必须以首帧为基准，
+      // 否则会先空等数秒才出画面；clock 与 time 分离，避免 apply 帧时把播放时钟钉回去。
+      time: data.frames.length ? data.frames[0].t : 0,
+      clock: data.frames.length ? data.frames[0].t : 0,
+      speed: 1,
+      frameIndex: 0,
+      playing: true,
+      data: data
+    };
+    for (let i = 0; i < data.obstacles.length; i++) {
+      const o = data.obstacles[i];
+      view.obstacleGrid[idx(o.x, o.y)] = 1;
+    }
+    for (let i = 0; i < 2; i++) {
+      const p = view.players[i];
+      const c = idx(p.x, p.y);
+      view.grid[c] = p.id;
+      view.trailTime[c] = 0;
+    }
+    return view;
+  }
+
+  function applyReplayFrame(frame) {
+    const v = replayView;
+    if (!v) return;
+    v.time = frame.t;
+
+    for (let k = 0; k < frame.spawns.length; k++) {
+      const s = frame.spawns[k];
+      v.powerups.push({ x: s.x, y: s.y, type: s.type, born: frame.t });
+    }
+    for (let k = 0; k < frame.pickups.length; k++) {
+      const e = frame.pickups[k];
+      v.powerups = v.powerups.filter(function (u) { return !(u.x === e.x && u.y === e.y); });
+      const p = v.players[e.i];
+      if (e.type === "boost") { p.boostUntil = frame.t + 3000; p.speedT = 1; addFloater("⚡ 疾速!", e.x, e.y, "#fbbf24"); }
+      else if (e.type === "phase") { p.phaseCharges = Math.min(p.phaseCharges + 1, 2); addFloater("🌀 瞬转!", e.x, e.y, "#a78bfa"); }
+      else { p.shieldUntil = frame.t + SHIELD_MS; p.shieldCharges = 1; addFloater("🛡 护盾!", e.x, e.y, "#60a5fa"); }
+      sfxPick(e.type);
+    }
+    for (let k = 0; k < frame.moves.length; k++) {
+      const e = frame.moves[k];
+      const p = v.players[e.i];
+      p.dir = { x: e.dx, y: e.dy };
+      p.x = e.x;
+      p.y = e.y;
+      if (e.shielded) {
+        spawnBurst(e.x, e.y, "#60a5fa");
+        addFloater("格挡!", e.x, e.y, "#60a5fa");
+      }
+      if (e.survived) { addFloater("判胜", e.x, e.y, COLORS[e.i].main); continue; }
+      if (e.reason) {
+        p.alive = false;
+        spawnBurst(e.x, e.y, COLORS[e.i].main);
+        addFloater(CRASH_SHORT[e.reason] || "出局!", e.x, e.y, COLORS[e.i].main);
+        continue;
+      }
+      const ci = idx(e.x, e.y);
+      v.grid[ci] = p.id;
+      v.trailTime[ci] = frame.t;
+    }
+    for (let k = 0; k < frame.deaths.length; k++) {
+      const e = frame.deaths[k];
+      const p = v.players[e.i];
+      p.alive = false;
+      spawnBurst(e.x, e.y, COLORS[e.i].main);
+      addFloater(CRASH_SHORT[e.reason] || "出局!", e.x, e.y, COLORS[e.i].main);
+    }
+    if (frame.boundary) v.boundary = frame.boundary;
+    updateReplayInfo();
+  }
+
+  function startReplay() {
+    if (!lastReplay || !lastReplay.frames.length) return;
+    initAudio();
+    stateBeforeReplay = gameState;
+    particles = [];
+    floaters = [];
+    replayView = buildReplayView(lastReplay);
+    gameState = "replay";
+    replayBar.classList.remove("hidden");
+    for (let i = 0; i < speedBtns.length; i++) {
+      speedBtns[i].classList.toggle("active", Number(speedBtns[i].dataset.speed) === replayView.speed);
+    }
+    updateReplayInfo();
+  }
+
+  function stepReplay() {
+    if (!replayView) return;
+    replayView.playing = false;
+    const frames = replayView.data.frames;
+    if (replayView.frameIndex >= frames.length) return;
+    applyReplayFrame(frames[replayView.frameIndex++]);
+  }
+
+  function exitReplay() {
+    replayView = null;
+    replayBar.classList.add("hidden");
+    gameState = stateBeforeReplay;
+    // 回放耗时较长，重置结算计时，退出后再给完整的准备时间
+    if (gameState === "roundOver") roundEndAt = gameTime;
+  }
+
+  function updateReplayInfo() {
+    if (!replayView) return;
+    replayInfo.textContent = "回放 " + replayView.frameIndex + " / " + replayView.data.frames.length +
+      (replayView.playing ? "" : " (暂停)");
+  }
+
+  for (let i = 0; i < speedBtns.length; i++) {
+    speedBtns[i].addEventListener("click", function () {
+      if (!replayView) return;
+      replayView.speed = Number(this.dataset.speed);
+      replayView.playing = true;
+      for (let k = 0; k < speedBtns.length; k++) speedBtns[k].classList.toggle("active", speedBtns[k] === this);
+    });
+  }
+  btnStep.addEventListener("click", stepReplay);
+  btnExitReplay.addEventListener("click", exitReplay);
+  btnReplay.addEventListener("click", startReplay);
+
+  // ---------- 渲染 ----------
+  function rr(x, y, w, h, r) {
+    ctx.beginPath();
+    if (ctx.roundRect) { ctx.roundRect(x, y, w, h, r); return; }
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function drawBackdrop() {
+    ctx.fillStyle = "#070b18";
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "rgba(86,196,232,0.055)";
+    ctx.beginPath();
+    for (let x = 1; x < COLS; x++) { ctx.moveTo(x * CELL, 0); ctx.lineTo(x * CELL, H); }
+    for (let y = 1; y < ROWS; y++) { ctx.moveTo(0, y * CELL); ctx.lineTo(W, y * CELL); }
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(86,196,232,0.095)";
+    ctx.beginPath();
+    for (let x = 5; x < COLS; x += 5) { ctx.moveTo(x * CELL, 0); ctx.lineTo(x * CELL, H); }
+    for (let y = 5; y < ROWS; y += 5) { ctx.moveTo(0, y * CELL); ctx.lineTo(W, y * CELL); }
+    ctx.stroke();
+
+    const off = (gameTime / 45) % 5;
+    ctx.fillStyle = "rgba(130,210,255,0.022)";
+    for (let y = off - 5; y < H; y += 5) ctx.fillRect(0, y, W, 1);
+
+    const sy = ((gameTime / 14) % (H + 120)) - 60;
+    const sg = ctx.createLinearGradient(0, sy - 35, 0, sy + 35);
+    sg.addColorStop(0, "rgba(80,220,255,0)");
+    sg.addColorStop(0.5, "rgba(80,220,255,0.035)");
+    sg.addColorStop(1, "rgba(80,220,255,0)");
+    ctx.fillStyle = sg;
+    ctx.fillRect(0, sy - 35, W, 70);
+  }
+
+  function drawObstacles() {
+    ctx.save();
+    for (let i = 0; i < obstacleCells.length; i++) {
+      const o = obstacleCells[i];
+      const px = o.x * CELL, py = o.y * CELL;
+      // 橙色实体砖：琥珀外发光 + 金属斜面 + 警示斜纹，和双方轨迹一眼区分
+      ctx.shadowColor = "rgba(251,146,60,0.55)";
+      ctx.shadowBlur = 9;
+      ctx.fillStyle = "rgba(120,53,15,0.62)";
+      ctx.fillRect(px + 1, py + 1, CELL - 2, CELL - 2);
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "rgba(251,146,60,0.30)";
+      ctx.fillRect(px + 1, py + 1, CELL - 2, 3);
+      ctx.fillRect(px + 1, py + 1, 3, CELL - 2);
+      ctx.strokeStyle = "rgba(251,146,60,0.92)";
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(px + 1.5, py + 1.5, CELL - 3, CELL - 3);
+      ctx.strokeStyle = "rgba(253,186,116,0.45)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(px + 5, py + CELL - 5); ctx.lineTo(px + CELL - 5, py + 5);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawBoundary() {
+    if (activeMapType !== "shrink") return;
+    const bx = boundary.minX * CELL;
+    const by = boundary.minY * CELL;
+    const bw = (boundary.maxX - boundary.minX + 1) * CELL;
+    const bh = (boundary.maxY - boundary.minY + 1) * CELL;
+    ctx.fillStyle = "rgba(3,6,16,0.7)";
+    ctx.fillRect(0, 0, W, by);
+    ctx.fillRect(0, by + bh, W, H - by - bh);
+    ctx.fillRect(0, by, bx, bh);
+    ctx.fillRect(bx + bw, by, W - bx - bw, bh);
+    const pulse = 0.45 + 0.25 * Math.abs(Math.sin(gameTime / 400));
+    ctx.strokeStyle = "rgba(248,113,113," + pulse + ")";
+    ctx.lineWidth = 2;
+    ctx.shadowColor = "#fb7185";
+    ctx.shadowBlur = 12;
+    ctx.strokeRect(bx + 1, by + 1, bw - 2, bh - 2);
+    ctx.shadowBlur = 0;
+  }
+
+  function drawTrails() {
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        const ci = idx(x, y);
+        const v = grid[ci];
+        if (!v) continue;
+        const age = gameTime - trailTime[ci];
+        const glow = Math.max(TRAIL_MIN_GLOW, 1 - age / TRAIL_FADE_MS);
+        const px = x * CELL, py = y * CELL;
+        const pre = v === 1 ? COLORS[0].soft : COLORS[1].soft;
+        ctx.fillStyle = pre + (0.05 + 0.16 * glow) + ")";
+        ctx.fillRect(px + 0.5, py + 0.5, CELL - 1, CELL - 1);
+        ctx.fillStyle = pre + (0.16 + 0.42 * glow) + ")";
+        ctx.fillRect(px + 3, py + 3, CELL - 6, CELL - 6);
+      }
+    }
+  }
+
+  function drawPlayer(p) {
+    const cx = p.x * CELL + CELL / 2;
+    const cy = p.y * CELL + CELL / 2;
+    const col = COLORS[p.id - 1];
+    const spd = p.speedT || 0;
+    const boosting = spd > 0.15;
+    const shielded = (p.shieldCharges > 0 && gameTime < p.shieldUntil);
+    const flicker = boosting ? (0.74 + 0.26 * Math.abs(Math.sin(gameTime / 55))) : 1;
+
+    const haloR = 13 + spd * 13;
+    const haloRGB = boostedRGB(boosting, shielded, col);
+    const grad = ctx.createRadialGradient(cx, cy, 1, cx, cy, haloR);
+    grad.addColorStop(0, "rgba(" + haloRGB + "," + (0.46 * flicker) + ")");
+    grad.addColorStop(0.45, "rgba(" + haloRGB + "," + (0.16 * flicker) + ")");
+    grad.addColorStop(1, "rgba(" + haloRGB + ",0)");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, haloR, 0, TAU);
+    ctx.fill();
+
+    if (boosting) {
+      ctx.strokeStyle = "rgba(251,191,36," + (0.34 * flicker) + ")";
+      ctx.lineWidth = 2;
+      const bx = -p.dir.x, by = -p.dir.y;
+      const sx = -by, sy = bx;
+      for (let s = -1; s <= 1; s += 2) {
+        const ox = sx * s * 6, oy = sy * s * 6;
+        ctx.beginPath();
+        ctx.moveTo(cx + ox + bx * 9, cy + oy + by * 9);
+        ctx.lineTo(cx + ox + bx * (16 + spd * 6), cy + oy + by * (16 + spd * 6));
+        ctx.stroke();
+      }
+    }
+
+    ctx.save();
+    ctx.shadowColor = boostedColor(boosting, shielded, col);
+    ctx.shadowBlur = 14 + spd * 12;
+    ctx.fillStyle = col.main;
+    rr(cx - 8, cy - 8, 16, 16, 5);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.fillStyle = p.queuedDir ? "#ffffff" : "#070b18";
+    ctx.beginPath();
+    ctx.arc(cx + p.dir.x * 3.2, cy + p.dir.y * 3.2, 2.6, 0, TAU);
+    ctx.fill();
+
+    if (p.phaseCharges > 0) {
+      ctx.strokeStyle = "rgba(167,139,250,0.95)";
+      ctx.lineWidth = 2;
+      for (let k = 0; k < p.phaseCharges; k++) {
+        const a0 = gameTime / 300 + k * 2.2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 15, a0, a0 + 1.3);
+        ctx.stroke();
+      }
+    }
+
+    if (shielded) {
+      ctx.strokeStyle = "rgba(96,165,250," + (0.65 + 0.3 * Math.abs(Math.sin(gameTime / 90))) + ")";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let k = 0; k < 6; k++) {
+        const a = gameTime / 500 + k * TAU / 6;
+        const px = cx + Math.cos(a) * 18;
+        const py = cy + Math.sin(a) * 18;
+        if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    }
+  }
+
+  function boostedRGB(boosting, shielded, col) {
+    if (boosting) return "251,191,36";
+    if (shielded) return "96,165,250";
+    return col.rgb;
+  }
+  function boostedColor(boosting, shielded, col) {
+    if (boosting) return "#fbbf24";
+    if (shielded) return "#60a5fa";
+    return col.main;
+  }
+
+  function drawPowerup(u) {
+    const cx = u.x * CELL + CELL / 2;
+    const cy = u.y * CELL + CELL / 2;
+    const meta = POWERUP_META[u.type];
+    const col = meta.color;
+    const pulse = 1 + Math.sin(gameTime / 180 + u.x) * 0.12;
+    const left = POWERUP_LIFE - (gameTime - u.born);
+    ctx.save();
+    ctx.shadowColor = col;
+    ctx.shadowBlur = 16;
+    ctx.fillStyle = "rgba(7,11,24,0.9)";
+    ctx.beginPath();
+    ctx.arc(cx, cy, 9 * pulse, 0, TAU);
+    ctx.fill();
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = col;
+    ctx.font = "bold 12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(meta.icon, cx, cy + 1);
+    if (left < 3500) {
+      ctx.strokeStyle = "rgba(248,113,113,0.9)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 13, -Math.PI / 2, -Math.PI / 2 + TAU * Math.max(0, left / 3500));
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawOverlay() {
+    if (gameState === "playing" || gameState === "replay" || gameState === "menu") return;
+    ctx.fillStyle = gameState === "paused" ? "rgba(6,10,24,0.62)" : "rgba(6,10,24,0.78)";
+    ctx.fillRect(0, 0, W, H);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    if (gameState === "paused") {
+      ctx.fillStyle = "#e2e8f0";
+      ctx.font = "bold 30px sans-serif";
+      ctx.fillText("已暂停 · 按 P 继续", W / 2, H / 2);
+      return;
+    }
+
+    if (gameState === "roundOver") {
+      let y = H / 2 - 74;
+      for (let i = 0; i < 2; i++) {
+        if (!roundCrashes[i]) continue;
+        ctx.fillStyle = COLORS[i].main;
+        ctx.font = "bold 18px sans-serif";
+        ctx.fillText("玩家 " + (i + 1) + " · " + CRASH_TEXT[roundCrashes[i]], W / 2, y);
+        y += 27;
+      }
+      if (roundNote) {
+        ctx.fillStyle = "#cbd5e1";
+        ctx.font = "14px sans-serif";
+        ctx.fillText(roundNote, W / 2, y + 2);
+      }
+      const hasWinner = players[0].alive || players[1].alive;
+      ctx.font = "bold 34px sans-serif";
+      if (!hasWinner) {
+        ctx.fillStyle = "#e2e8f0";
+        ctx.fillText("势均力敌 · 本局平局重赛", W / 2, H / 2 + 34);
+      } else {
+        const w = players[0].alive ? 0 : 1;
+        const col = COLORS[w].main;
+        ctx.fillStyle = col;
+        ctx.shadowColor = col;
+        ctx.shadowBlur = 18;
+        ctx.fillText("玩家 " + (w + 1) + " 得分！", W / 2, H / 2 + 34);
+        ctx.shadowBlur = 0;
+      }
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "15px sans-serif";
+      ctx.fillText("当前比分 " + players[0].score + " : " + players[1].score + " · 下一局准备中…", W / 2, H / 2 + 78);
+      return;
+    }
+
+    if (gameState === "gameOver") {
+      const winner = players[0].score > players[1].score ? 0 : 1;
+      const col = COLORS[winner].main;
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "16px sans-serif";
+      ctx.fillText("最终比分 " + players[0].score + " : " + players[1].score, W / 2, H / 2 - 58);
+      ctx.fillStyle = col;
+      ctx.shadowColor = col;
+      ctx.shadowBlur = 22;
+      ctx.font = "bold 42px sans-serif";
+      ctx.fillText("🏆 玩家 " + (winner + 1) + " 获胜！", W / 2, H / 2);
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#cbd5e1";
+      ctx.font = "16px sans-serif";
+      ctx.fillText("按 R 或点击「重新开始」再来一场", W / 2, H / 2 + 48);
+    }
+  }
+
+  function drawScene() {
+    drawBackdrop();
+    drawObstacles();
+    drawBoundary();
+    drawTrails();
+    for (let i = 0; i < powerups.length; i++) drawPowerup(powerups[i]);
+    for (let i = 0; i < players.length; i++) if (players[i].alive) drawPlayer(players[i]);
+
+    for (let i = 0; i < particles.length; i++) {
+      const pt = particles[i];
+      ctx.globalAlpha = Math.max(0, pt.life);
+      ctx.fillStyle = pt.color;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, pt.r, 0, TAU);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    for (let i = 0; i < floaters.length; i++) {
+      const f = floaters[i];
+      ctx.globalAlpha = Math.max(0, f.life);
+      ctx.fillStyle = f.color;
+      ctx.font = "bold 15px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(f.text, f.x, f.y - (1 - f.life) * 34);
+    }
+    ctx.globalAlpha = 1;
+    drawOverlay();
+  }
+
+  // 回放渲染：临时把全局视图切到回放快照，画完再还原
+  function render() {
+    if (gameState !== "replay" || !replayView) { drawScene(); return; }
+    const v = replayView;
+    const backup = {
+      grid: grid, trailTime: trailTime, obstacleGrid: obstacleGrid,
+      obstacleCells: obstacleCells, boundary: boundary, activeMapType: activeMapType,
+      players: players, powerups: powerups, gameTime: gameTime,
+      roundCrashes: roundCrashes, roundNote: roundNote
+    };
+    grid = v.grid;
+    trailTime = v.trailTime;
+    obstacleGrid = v.obstacleGrid;
+    obstacleCells = v.data.obstacles;
+    boundary = v.boundary;
+    activeMapType = v.mapType;
+    players = v.players;
+    powerups = v.powerups;
+    gameTime = v.time;
+    roundCrashes = [null, null];
+    roundNote = "";
+
+    drawScene();
+    ctx.fillStyle = "rgba(34,211,238,0.9)";
+    ctx.font = "bold 13px sans-serif";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillText("● 回放中 · " + MAP_NAMES[v.mapType], 12, 12);
+
+    grid = backup.grid;
+    trailTime = backup.trailTime;
+    obstacleGrid = backup.obstacleGrid;
+    obstacleCells = backup.obstacleCells;
+    boundary = backup.boundary;
+    activeMapType = backup.activeMapType;
+    players = backup.players;
+    powerups = backup.powerups;
+    gameTime = backup.gameTime;
+    roundCrashes = backup.roundCrashes;
+    roundNote = backup.roundNote;
+  }
+
+  function updateHUD(force, forcePips) {
+    for (let i = 0; i < 2; i++) {
+      const p = players[i];
+      if (!p) continue;
+      sEl[i].textContent = p.score;
+      if (forcePips) {
+        let html = "";
+        for (let k = 0; k < targetWins; k++) html += "<i class='" + (k < p.score ? "on" : "") + "'></i>";
+        pipEl[i].innerHTML = html;
+      }
+      const parts = [];
+      const rem = Math.max(0, (p.boostUntil - gameTime) / 1000);
+      if (rem > 0) parts.push("⚡ " + rem.toFixed(1) + "s");
+      if (p.phaseCharges > 0) parts.push("🌀 ×" + p.phaseCharges);
+      if (p.shieldCharges > 0 && gameTime < p.shieldUntil) {
+        parts.push("🛡 " + Math.max(0, (p.shieldUntil - gameTime) / 1000).toFixed(1) + "s");
+      }
+      const str = parts.join("   ") || "—";
+      if (force || str !== hudCache[i]) { bEl[i].textContent = str; hudCache[i] = str; }
+    }
+    roundNoEl.textContent = "第 " + roundIndex + " 局";
+  }
+
+  // ---------- 主循环 ----------
+  function loop(now) {
+    requestAnimationFrame(loop);
+    if (!lastFrame) lastFrame = now;
+    let dt = now - lastFrame;
+    lastFrame = now;
+    if (dt > 100) dt = 100;
+
+    if (gameState === "playing") {
+      tickAcc += dt;
+      let guard = 0;
+      while (tickAcc >= TICK && guard < 20 && gameState === "playing") {
+        tickAcc -= TICK;
+        gameTime += TICK;
+        doTick();
+        guard++;
+      }
+      updateHUD(false, false);
+    } else if (gameState === "roundOver") {
+      gameTime += dt;
+      if (gameTime - roundEndAt > ROUND_PAUSE) {
+        if (players[0].score >= targetWins || players[1].score >= targetWins) {
+          gameState = "gameOver";
+          sfxWin();
+        } else {
+          roundIndex++;
+          resetRound();
+        }
+      }
+    } else if (gameState === "replay" && replayView) {
+      const frames = replayView.data.frames;
+      if (replayView.playing) {
+        replayView.clock += dt * replayView.speed;
+        let guard = 0;
+        while (replayView.frameIndex < frames.length &&
+               frames[replayView.frameIndex].t <= replayView.clock && guard < 200) {
+          applyReplayFrame(frames[replayView.frameIndex++]);
+          guard++;
+        }
+        if (replayView.frameIndex >= frames.length) {
+          replayView.playing = false;
+          replayInfo.textContent = "回放结束 · " + frames.length + " / " + frames.length;
+        } else {
+          updateReplayInfo();
+        }
+      }
+    }
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const pt = particles[i];
+      pt.x += pt.vx * dt / 16;
+      pt.y += pt.vy * dt / 16;
+      pt.vx *= 0.96;
+      pt.vy *= 0.96;
+      pt.life -= dt / 700;
+      if (pt.life <= 0) particles.splice(i, 1);
+    }
+    for (let i = floaters.length - 1; i >= 0; i--) {
+      floaters[i].life -= dt / 900;
+      if (floaters[i].life <= 0) floaters.splice(i, 1);
+    }
+
+    render();
+  }
+
+  // 初始化：显示菜单，先准备一局用于背景渲染
+  newMatch(2);
+  updateDiffUI();
+  gameState = "menu";
+  menuPanel.classList.remove("hidden");
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
