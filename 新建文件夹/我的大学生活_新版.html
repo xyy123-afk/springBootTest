@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的大学生活 · 大一到大二 · 课堂分享 2026</title>
+<style>
+:root{
+  --bg:#080b10;
+  --bg2:#0d1118;
+  --panel:#121822;
+  --panel2:#161e2b;
+  --line:#232d3d;
+  --line2:#2d394d;
+  --txt:#e8edf5;
+  --txt2:#aab6c8;
+  --muted:#6b7a90;
+  --amber:#f0b429;
+  --green:#6ee7a8;
+  --blue:#6cb6ff;
+  --purple:#c4a2ff;
+  --red:#ff8b8b;
+  --mono:"SF Mono","JetBrains Mono","Cascadia Code",Consolas,"Courier New",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--txt);font-family:var(--sans);
+  display:flex;flex-direction:column;overflow:hidden;
+  background-image:radial-gradient(circle at 15% 12%,rgba(108,182,255,.06),transparent 42%),radial-gradient(circle at 85% 88%,rgba(110,231,168,.05),transparent 42%);
+}
+
+/* ===== viewport + scaled 16:9 stage ===== */
+.viewport{flex:1;position:relative;overflow:hidden}
+.stage{
+  position:absolute;left:50%;top:50%;width:1280px;height:720px;
+  transform:translate(-50%,-50%) scale(1);transform-origin:center center;
+}
+.slide{
+  position:absolute;inset:0;padding:66px 86px;overflow:hidden;
+  opacity:0;visibility:hidden;transition:opacity .45s ease;
+  display:flex;flex-direction:column;
+}
+.slide.active{opacity:1;visibility:visible}
+.slide::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:5px;
+  background:var(--accent,var(--blue));opacity:.85;
+}
+.slide[data-chapter="cover"]{--accent:var(--blue)}
+.slide[data-chapter="contents"]{--accent:var(--txt2)}
+.slide[data-chapter="01"]{--accent:var(--blue)}
+.slide[data-chapter="02"]{--accent:var(--amber)}
+.slide[data-chapter="03"]{--accent:var(--green)}
+.slide[data-chapter="04"]{--accent:var(--purple)}
+.slide[data-chapter="05"]{--accent:var(--red)}
+.slide[data-chapter="06"]{--accent:var(--green)}
+.slide[data-chapter="end"]{--accent:var(--green)}
+
+/* staggered reveal */
+.slide.active .rv{animation:rise .6s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--d,0)*70ms)}
+@keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+
+/* ===== shared bits ===== */
+.tag{font-family:var(--mono);font-size:13px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+.tag .hl{color:var(--accent)}
+.kicker{display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:14px;letter-spacing:.14em;color:var(--accent);text-transform:uppercase}
+.kicker::before{content:"";width:26px;height:2px;background:var(--accent)}
+.slide-title{font-size:44px;font-weight:700;line-height:1.2;letter-spacing:-.01em;margin:16px 0 6px}
+.slide-title .em{color:var(--accent)}
+.sub{font-size:19px;color:var(--txt2);line-height:1.6}
+.lead{font-size:22px;line-height:1.65;color:var(--txt2);max-width:900px}
+.lead b{color:var(--txt);font-weight:600}
+.grow{flex:1}
+.foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;padding-top:18px;border-top:1px solid var(--line)}
+.foot .pg{font-family:var(--mono);font-size:13px;color:var(--muted);letter-spacing:.08em}
+.foot .pg b{color:var(--txt2)}
+.grid{display:grid;gap:18px}
+
+/* terminal / code window */
+.win{background:#0a0e15;border:1px solid var(--line2);border-radius:10px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.4)}
+.win-bar{display:flex;align-items:center;gap:8px;height:38px;padding:0 14px;background:#0f1620;border-bottom:1px solid var(--line)}
+.dot{width:10px;height:10px;border-radius:50%}
+.dot.r{background:#ff6b6b}.dot.y{background:#f0b429}.dot.g{background:#5ad48a}
+.win-bar .name{font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:8px}
+.win-bar .right{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.win pre{font-family:var(--mono);font-size:14px;line-height:1.85;padding:18px 20px;color:var(--txt2);white-space:pre;overflow:hidden}
+.c-kw{color:var(--purple)}.c-str{color:var(--green)}.c-num{color:#f2a65a}.c-com{color:#5d6b7f;font-style:italic}.c-fn{color:var(--blue)}.c-op{color:#8fa3bf}
+.t-prompt{color:var(--green)}.t-cmd{color:var(--txt)}.t-arg{color:var(--txt2)}.t-out{color:var(--muted)}.t-ok{color:var(--green)}
+
+/* point cards */
+.pts{display:grid;gap:14px}
+.pt{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;padding:16px 18px}
+.pt h4{font-size:18px;font-weight:650;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.pt h4 .n{font-family:var(--mono);font-size:12px;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:1px 6px;opacity:.9}
+.pt p{font-size:15px;color:var(--txt2);line-height:1.6}
+.pt p .warn{color:var(--amber)}
+
+/* quote */
+.quote{border-left:3px solid var(--accent);padding:8px 0 8px 22px;font-size:21px;line-height:1.55;color:var(--txt);font-weight:500}
+.quote .cite{display:block;margin-top:8px;font-size:14px;color:var(--muted);font-family:var(--mono)}
+
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{font-family:var(--mono);font-size:13px;color:var(--txt2);border:1px solid var(--line2);border-radius:999px;padding:6px 14px;background:var(--panel)}
+.chip b{color:var(--accent)}
+
+/* ===== cover ===== */
+.cover .kicker{margin-bottom:26px}
+.cover h1{font-size:82px;font-weight:800;letter-spacing:-.03em;line-height:1;margin:10px 0 18px}
+.cover h1 span{color:var(--blue)}
+.cover .slogan{font-size:26px;color:var(--txt2);font-weight:300}
+.cover-cols{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center;flex:1}
+.stats{display:flex;gap:34px;margin-top:42px}
+.stat .num{font-family:var(--mono);font-size:52px;font-weight:700;line-height:1;color:var(--accent)}
+.stat .lbl{font-size:14px;color:var(--muted);margin-top:8px}
+.type-line{opacity:0;animation:rise .5s both}
+.slide.active .cover-term .type-line{animation:lineIn .5s both}
+@keyframes lineIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+.cursor{display:inline-block;width:8px;height:16px;background:var(--green);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* ===== contents ===== */
+.contents-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:30px;flex:1;align-content:start}
+.chap-link{display:flex;gap:20px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px 22px;cursor:pointer;transition:.2s;text-decoration:none;color:inherit}
+.chap-link:hover{border-color:var(--c);background:var(--panel2);transform:translateY(-3px)}
+.chap-link .cn{font-family:var(--mono);font-size:34px;font-weight:700;color:var(--c);line-height:1}
+.chap-link h3{font-size:20px;margin-bottom:6px}
+.chap-link p{font-size:14px;color:var(--muted);line-height:1.55}
+.chap-link .range{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+.chap-link[data-c="01"]{--c:var(--blue)}.chap-link[data-c="02"]{--c:var(--amber)}.chap-link[data-c="03"]{--c:var(--green)}.chap-link[data-c="04"]{--c:var(--purple)}.chap-link[data-c="05"]{--c:var(--red)}.chap-link[data-c="06"]{--c:var(--green)}
+
+/* ===== chapter divider ===== */
+.divider{justify-content:center}
+.divider .big-num{font-family:var(--mono);font-size:190px;font-weight:800;line-height:.8;color:var(--accent);opacity:.12;position:absolute;right:80px;top:120px}
+.divider h2{font-size:66px;font-weight:800;letter-spacing:-.02em;margin:14px 0 10px;position:relative}
+.divider .dsub{font-size:26px;color:var(--txt2);font-weight:300;position:relative}
+.divider .dquote{margin-top:34px;font-size:20px;color:var(--txt2);line-height:1.6;max-width:760px;position:relative}
+.divider .dquote b{color:var(--accent)}
+.divider .words{display:flex;gap:14px;margin-top:38px;position:relative}
+.divider .words span{font-family:var(--mono);font-size:15px;color:var(--txt2);border:1px solid var(--line2);border-radius:6px;padding:9px 18px;background:var(--panel)}
+.divider .words span::before{content:"# ";color:var(--accent)}
+
+/* two-column content */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:34px;flex:1;align-items:start;min-height:0}
+.two.wide-left{grid-template-columns:1.15fr .85fr}
+.stack{display:flex;flex-direction:column;gap:16px}
+
+/* timeline */
+.timeline{position:relative;margin-top:26px;flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:18px;align-content:start}
+.timeline::before{content:"";position:absolute;left:0;right:0;top:26px;height:1px;background:var(--line2)}
+.tl{position:relative;padding-top:56px}
+.tl .node{position:absolute;top:16px;left:0;width:20px;height:20px;border-radius:50%;background:var(--bg);border:3px solid var(--accent)}
+.tl .step{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:.08em}
+.tl h4{font-size:19px;margin:8px 0 10px}
+.tl p{font-size:15px;color:var(--txt2);line-height:1.65}
+
+/* structural diagram (web page) */
+.wire{display:flex;flex-direction:column;gap:7px}
+.wire div{font-family:var(--mono);font-size:12px;border:1px dashed var(--line2);border-radius:5px;padding:8px 12px;color:var(--txt2);background:var(--panel)}
+.wire .w-tag{color:var(--blue)}
+.wire .w-row{display:flex;gap:7px}
+.wire .w-row div{flex:1}
+
+/* numbered steps (project) */
+.steps{display:grid;gap:12px}
+.step-row{display:flex;gap:16px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.step-row .sn{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--accent);line-height:1;min-width:34px}
+.step-row h4{font-size:17px;margin-bottom:4px}
+.step-row p{font-size:14px;color:var(--txt2);line-height:1.6}
+
+/* ===== toolbar ===== */
+.toolbar{
+  height:64px;flex:none;display:flex;align-items:center;gap:18px;padding:0 26px;
+  background:linear-gradient(180deg,#0a0e15,#080b10);border-top:1px solid var(--line);z-index:30;
+}
+.tbtn{
+  width:38px;height:38px;flex:none;border:1px solid var(--line2);background:var(--panel);color:var(--txt2);
+  border-radius:8px;cursor:pointer;display:grid;place-items:center;font-size:17px;transition:.18s;
+}
+.tbtn:hover{border-color:var(--blue);color:var(--txt);background:var(--panel2)}
+.tbtn:disabled{opacity:.35;cursor:default}
+.tbtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.prog{display:flex;align-items:center;gap:14px;flex:1;min-width:0}
+.prog .count{font-family:var(--mono);font-size:13px;color:var(--txt2);white-space:nowrap}
+.prog .count b{color:var(--txt);font-size:16px}
+.bar{position:relative;flex:1;height:4px;background:var(--line);border-radius:4px;overflow:hidden}
+.bar .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,var(--blue),var(--green));border-radius:4px;transition:width .4s ease}
+.chap-name{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap;min-width:150px;text-align:right}
+.hint{font-size:12px;color:var(--muted);white-space:nowrap}
+.hint kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line2);border-radius:4px;padding:1px 5px;color:var(--txt2)}
+
+/* ===== outline panel ===== */
+.panel{
+  position:fixed;inset:0;background:rgba(4,6,10,.72);backdrop-filter:blur(6px);z-index:50;
+  display:flex;opacity:0;visibility:hidden;transition:.25s;
+}
+.panel.open{opacity:1;visibility:visible}
+.panel .sheet{width:440px;max-width:90vw;background:var(--bg2);border-right:1px solid var(--line2);padding:32px 30px;overflow-y:auto;transform:translateX(-30px);transition:.3s}
+.panel.open .sheet{transform:none}
+.panel h2{font-size:22px;margin-bottom:6px}
+.panel .psub{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:26px}
+.pgroup{margin-bottom:22px}
+.pgroup .gt{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.1em;margin-bottom:9px;padding-left:2px}
+.pgroup[data-c="01"]{--accent:var(--blue)}.pgroup[data-c="02"]{--accent:var(--amber)}.pgroup[data-c="03"]{--accent:var(--green)}.pgroup[data-c="04"]{--accent:var(--purple)}.pgroup[data-c="05"]{--accent:var(--red)}.pgroup[data-c="06"]{--accent:var(--green)}.pgroup[data-c="-"]{--accent:var(--txt2)}
+.pitem{display:flex;gap:12px;align-items:center;padding:9px 12px;border-radius:7px;cursor:pointer;color:var(--txt2);font-size:15px;transition:.15s}
+.pitem:hover{background:var(--panel2);color:var(--txt)}
+.pitem.cur{background:var(--panel);color:var(--txt)}
+.pitem .pi{font-family:var(--mono);font-size:11px;color:var(--muted);min-width:24px}
+.pitem.cur .pi{color:var(--blue)}
+
+@media (max-width:640px){
+  .hint{display:none}.chap-name{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="viewport" id="viewport">
+  <div class="stage" id="stage">
+
+    <!-- 1 · COVER -->
+    <section class="slide cover" data-chapter="cover" data-name="封面" style="--accent:var(--blue)">
+      <div class="kicker rv" style="--d:0">课堂分享 · 2026 <span class="tag" style="color:var(--muted)">/ CLASS TALK</span></div>
+      <div class="cover-cols">
+        <div>
+          <h1 class="rv" style="--d:1">我的<span>大学生活</span></h1>
+          <div class="slogan rv" style="--d:2">从大一的兵荒马乱，到大二的从容一点点</div>
+          <div class="stats rv" style="--d:3">
+            <div class="stat"><div class="num">2</div><div class="lbl">年时光</div></div>
+            <div class="stat"><div class="num">1</div><div class="lbl">张课表</div></div>
+            <div class="stat"><div class="num">N</div><div class="lbl">个早八</div></div>
+          </div>
+        </div>
+        <div class="win cover-term rv" style="--d:4">
+          <div class="win-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="name">~/college — zsh</span><span class="right">UTF-8</span></div>
+          <pre><span class="type-line" style="animation-delay:.5s"><span class="t-prompt">$</span> <span class="t-cmd">whoami</span>
+<span class="t-out">student · 大二</span></span><span class="type-line" style="animation-delay:1s"><span class="t-prompt">$</span> <span class="t-cmd">ls</span> <span class="t-arg">./college</span>
+<span class="t-out">morning  class  free  exam</span></span><span class="type-line" style="animation-delay:1.5s"><span class="t-prompt">$</span> <span class="t-cmd">cat</span> <span class="t-arg">today.txt</span>
+<span class="t-out">早八 ✓  上课 ✓  复习中 ...</span>
+<span class="t-ok">still figuring out</span></span><span class="type-line" style="animation-delay:2.1s"><span class="t-prompt">$</span> <span class="cursor"></span></span></pre>
+        </div>
+      </div>
+      <div class="foot rv" style="--d:5"><span class="tag">main · UTF-8 · zsh</span><span class="pg"><b>01</b> / 15</span></div>
+    </section>
+
+    <!-- 2 · CONTENTS -->
+    <section class="slide contents" data-chapter="contents" data-name="目录">
+      <div class="kicker rv" style="--d:0">目录 · 六段日常</div>
+      <div class="tag rv" style="--d:1;margin-top:14px;color:var(--muted)">CONTENTS / 06 CHAPTERS</div>
+      <div class="lead rv" style="--d:2;margin-top:18px;font-size:19px">没有惊天动地的故事，只有一些<b>反复出现的生活片段</b>。<br>把它们摊开看，才发现这一年过得挺具体。</div>
+      <div class="contents-grid">
+        <a class="chap-link rv" style="--d:3" data-c="01" data-goto="2"><div class="cn">01</div><div><h3>大一到大二</h3><p>从找教室，到找到自己的节奏。</p></div><span class="range">P03–P04</span></a>
+        <a class="chap-link rv" style="--d:4" data-c="02" data-goto="4"><div class="cn">02</div><div><h3>早八</h3><p>每天的第一场仗，从闹钟开始。</p></div><span class="range">P05–P06</span></a>
+        <a class="chap-link rv" style="--d:5" data-c="03" data-goto="6"><div class="cn">03</div><div><h3>课程</h3><p>课表上的格子，和格子里的日子。</p></div><span class="range">P07–P08</span></a>
+        <a class="chap-link rv" style="--d:6" data-c="04" data-goto="8"><div class="cn">04</div><div><h3>闲暇时间</h3><p>没人点名的时候，我在干嘛。</p></div><span class="range">P09–P10</span></a>
+        <a class="chap-link rv" style="--d:7" data-c="05" data-goto="10"><div class="cn">05</div><div><h3>考试前的复习</h3><p>一周之内，把一学期装回脑子。</p></div><span class="range">P11–P12</span></a>
+        <a class="chap-link rv" style="--d:8" data-c="06" data-goto="12"><div class="cn">06</div><div><h3>总结与感谢</h3><p>这一年，值得记下的和值得谢谢的。</p></div><span class="range">P13–P15</span></a>
+      </div>
+      <div class="foot rv" style="--d:9"><span class="tag">我的大学生活</span><span class="pg"><b>02</b> / 15</span></div>
+    </section>
+
+    <!-- 3 · CH1 divider -->
+    <section class="slide divider" data-chapter="01" data-name="01 大一到大二">
+      <div class="big-num rv" style="--d:0">01</div>
+      <div class="kicker rv" style="--d:0">CHAPTER ONE</div>
+      <h2 class="rv" style="--d:1">大一到大二</h2>
+      <div class="dsub rv" style="--d:2">从找教室，到找到自己的节奏</div>
+      <div class="dquote rv" style="--d:3">大一忙着适应，<b>大二忙着选择。</b></div>
+      <div class="words rv" style="--d:4"><span>报到</span><span>试错</span><span>稳定下来</span></div>
+      <div class="foot rv" style="--d:5"><span class="tag">CHAPTER ONE / 01</span><span class="pg"><b>03</b> / 15</span></div>
+    </section>
+
+    <!-- 4 · 时间线 -->
+    <section class="slide" data-chapter="01" data-name="01 大一到大二">
+      <div class="kicker rv" style="--d:0">四个阶段，一条时间线</div>
+      <div class="tag rv" style="--d:1;margin-top:14px">TIMELINE / FROM FRESHMAN TO SOPHOMORE</div>
+      <div class="quote rv" style="--d:2;margin-top:22px;font-size:19px">变化不是某一天突然发生的。<br>是某天回头看，发现自己已经不一样了。</div>
+      <div class="timeline">
+        <div class="tl rv" style="--d:3"><div class="node"></div><div class="step">STEP 01</div><h4>刚入学</h4><p>什么都新鲜，也什么都不熟。找教室靠导航，选课靠运气。</p></div>
+        <div class="tl rv" style="--d:4"><div class="node"></div><div class="step">STEP 02</div><h4>第一学期</h4><p>被节奏推着走。作业、ddl、考试，第一次学会自己排优先级。</p></div>
+        <div class="tl rv" style="--d:5"><div class="node"></div><div class="step">STEP 03</div><h4>慢慢摸清</h4><p>哪门课要跟紧，哪种事可以放一放。开始有自己的判断。</p></div>
+        <div class="tl rv" style="--d:6"><div class="node"></div><div class="step">NOW</div><h4>大二</h4><p>开始有意识地选：选课、选方向，也选怎么花自己的时间。</p></div>
+      </div>
+      <div class="foot rv" style="--d:7"><span class="tag">大一到大二 / 4 个阶段</span><span class="pg">我的大学生活 · <b>04</b> / 15</span></div>
+    </section>
+
+    <!-- 5 · CH2 divider -->
+    <section class="slide divider" data-chapter="02" data-name="02 早八">
+      <div class="big-num rv" style="--d:0">02</div>
+      <div class="kicker rv" style="--d:0">CHAPTER TWO</div>
+      <h2 class="rv" style="--d:1">早八</h2>
+      <div class="dsub rv" style="--d:2">每天的第一场仗，从闹钟开始</div>
+      <div class="dquote rv" style="--d:3">大学教我的第一件事：<b>不是怎么睡懒觉，是怎么在困的时候起床。</b></div>
+      <div class="words rv" style="--d:4"><span>闹钟</span><span>早餐</span><span>前排</span></div>
+      <div class="foot rv" style="--d:5"><span class="tag">CHAPTER TWO / 02</span><span class="pg"><b>05</b> / 15</span></div>
+    </section>
+
+    <!-- 6 · 早八 -->
+    <section class="slide" data-chapter="02" data-name="02 早八">
+      <div class="kicker rv" style="--d:0">02 / THE 8 A.M. CLASS</div>
+      <div class="slide-title rv" style="--d:1">早八：和闹钟的<span class="em">每日谈判</span></div>
+      <div class="two wide-left" style="margin-top:20px">
+        <div class="stack">
+          <div class="quote rv" style="--d:2;font-size:20px;margin-bottom:4px">早八很难受，<br>但它把一天的节奏先立住了。</div>
+          <div class="pt rv" style="--d:3"><h4><span class="n">01</span>闹钟：设三个，最后一个才管用</h4><p>前两个是心理安慰，第三个才是真的。踩点冲进教室那一刻，比课还提神。</p></div>
+          <div class="pt rv" style="--d:4"><h4><span class="n">02</span>座位：能坐前排就坐前排</h4><p>不是因为突然听懂了，是因为不好意思趴下。</p></div>
+          <div class="pt rv" style="--d:5"><h4><span class="n">03</span>早餐：早八的开机仪式</h4><p><span class="warn">踩过的坑：</span>空腹听一节高数，脑子会当场罢工。</p></div>
+        </div>
+        <div class="stack">
+          <div class="win rv" style="--d:3">
+            <div class="win-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="name">morning.log</span><span class="right">07:00 → 08:00</span></div>
+<pre><span class="t-prompt">$</span> <span class="t-cmd">wake</span> <span class="t-arg">--alarm 07:00</span>
+<span class="t-out">snooze ×3 → 07:18</span>
+<span class="t-prompt">$</span> <span class="t-cmd">commute</span> <span class="t-arg">--to classroom</span>
+<span class="t-ok">arrived 07:57 · 3 min left</span>
+<span class="t-prompt">$</span> <span class="t-cmd">attend</span> <span class="t-arg">--class 早八</span>
+<span class="t-ok">status: 醒着 ✓</span></pre>
+          </div>
+          <div class="quote rv" style="--d:5;font-size:18px">痛是真痛，<br>但一天就这么被“启动”了。</div>
+        </div>
+      </div>
+      <div class="foot rv" style="--d:6"><span class="tag">02 / 早八</span><span class="pg">我的大学生活 · <b>06</b> / 15</span></div>
+    </section>
+
+    <!-- 7 · CH3 divider -->
+    <section class="slide divider" data-chapter="03" data-name="03 课程">
+      <div class="big-num rv" style="--d:0">03</div>
+      <div class="kicker rv" style="--d:0">CHAPTER THREE</div>
+      <h2 class="rv" style="--d:1">课程</h2>
+      <div class="dsub rv" style="--d:2">课表上的格子，和格子里的日子</div>
+      <div class="dquote rv" style="--d:3">有的课让你<b>熬夜</b>，有的课让你<b>发呆</b>，<br>有的课让你突然觉得“哦，原来是这样”。</div>
+      <div class="words rv" style="--d:4"><span>专业课</span><span>公共课</span><span>选修课</span></div>
+      <div class="foot rv" style="--d:5"><span class="tag">CHAPTER THREE / 03</span><span class="pg"><b>07</b> / 15</span></div>
+    </section>
+
+    <!-- 8 · 课程 -->
+    <section class="slide" data-chapter="03" data-name="03 课程">
+      <div class="kicker rv" style="--d:0">03 / CLASSES · 课表里的几种日子</div>
+      <div class="slide-title rv" style="--d:1">课程：<span class="em">课表不止是格子</span></div>
+      <div class="two wide-left" style="margin-top:20px">
+        <div class="stack">
+          <div class="pts">
+            <div class="pt rv" style="--d:2"><h4><span class="n">01</span>硬课：先记下来，回头再啃</h4><p>听不懂没关系，笔记是给未来的自己留的一根绳子。</p></div>
+            <div class="pt rv" style="--d:3"><h4><span class="n">02</span>喜欢的课：会主动追问</h4><p>坐前排、课后问问题。那种“想弄明白”的劲头很珍贵。</p></div>
+            <div class="pt rv" style="--d:4"><h4><span class="n">03</span>空出来的格子：自己定义</h4><p>没有真正的水课，只有没找到用法的时间。补作业、看闲书，也算赚到。</p></div>
+          </div>
+        </div>
+        <div class="stack">
+          <div class="win rv" style="--d:3">
+            <div class="win-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="name">schedule.txt</span><span class="right">week 12</span></div>
+<pre><span class="t-out">MON</span>  08:00  早八 · 前排
+      14:00  英语 · 听写
+<span class="t-out">TUE</span>  10:00  专业课 · 记笔记
+<span class="t-out">WED</span>  08:00  高数 · 坐后排会后悔
+<span class="t-out">THU</span>  16:00  选修 · 真的感兴趣
+<span class="t-out">FRI</span>  ----  空 · 补觉 / 自习</pre>
+          </div>
+          <div class="quote rv" style="--d:5;font-size:18px">课表是固定的，<br>但每一格怎么过，是自己选的。</div>
+        </div>
+      </div>
+      <div class="foot rv" style="--d:6"><span class="tag">03 / 课程</span><span class="pg">我的大学生活 · <b>08</b> / 15</span></div>
+    </section>
+
+    <!-- 9 · CH4 divider -->
+    <section class="slide divider" data-chapter="04" data-name="04 闲暇时间">
+      <div class="big-num rv" style="--d:0">04</div>
+      <div class="kicker rv" style="--d:0">CHAPTER FOUR</div>
+      <h2 class="rv" style="--d:1">闲暇时间</h2>
+      <div class="dsub rv" style="--d:2">没人点名的时候，我在干嘛</div>
+      <div class="dquote rv" style="--d:3">真正决定一个人状态的，<b>往往是没课的那几个小时。</b></div>
+      <div class="words rv" style="--d:4"><span>发呆</span><span>运动</span><span>瞎折腾</span></div>
+      <div class="foot rv" style="--d:5"><span class="tag">CHAPTER FOUR / 04</span><span class="pg"><b>09</b> / 15</span></div>
+    </section>
+
+    <!-- 10 · 闲暇 -->
+    <section class="slide" data-chapter="04" data-name="04 闲暇时间">
+      <div class="kicker rv" style="--d:0">04 / FREE TIME · 没课的时候</div>
+      <div class="slide-title rv" style="--d:1">闲暇：把时间花在<span class="em">自己身上</span></div>
+      <div class="two" style="margin-top:20px">
+        <div class="stack">
+          <div class="pt rv" style="--d:2"><h4><span class="n">01</span>先放空</h4><p>睡午觉、刷手机、坐着发呆。别把每一分钟都安排满，会累。</p></div>
+          <div class="pt rv" style="--d:3"><h4><span class="n">02</span>再折腾</h4><p>跟着教程做点没用的小东西，纯粹因为想做，不是为了交作业。</p></div>
+          <div class="pt rv" style="--d:4"><h4><span class="n">03</span>出门走走</h4><p>操场跑两圈，换个食堂窗口，校园里瞎逛。换环境比硬撑有用。</p></div>
+        </div>
+        <div class="stack">
+          <div class="quote rv" style="--d:3;font-size:20px">这些时间不产出绩点，<br>但产出“我还是我”的感觉。</div>
+          <div class="chips rv" style="--d:4"><span class="chip">午睡</span><span class="chip">操场</span><span class="chip">教程</span><span class="chip">小项目</span><span class="chip">闲书</span><span class="chip">发呆</span></div>
+          <div class="pt rv" style="--d:5"><h4><span class="n" style="color:var(--amber);border-color:var(--amber)">坑</span>一刷就到半夜</h4><p>第二天早八更痛苦，这笔账总是第二天还。</p></div>
+        </div>
+      </div>
+      <div class="foot rv" style="--d:6"><span class="tag">04 / 闲暇时间</span><span class="pg">我的大学生活 · <b>10</b> / 15</span></div>
+    </section>
+
+    <!-- 11 · CH5 divider -->
+    <section class="slide divider" data-chapter="05" data-name="05 考前复习">
+      <div class="big-num rv" style="--d:0">05</div>
+      <div class="kicker rv" style="--d:0">CHAPTER FIVE</div>
+      <h2 class="rv" style="--d:1">考前复习</h2>
+      <div class="dsub rv" style="--d:2">一周之内，把一学期装回脑子</div>
+      <div class="dquote rv" style="--d:3">考前最可怕的不是难，是<b>不知道该从哪开始。</b></div>
+      <div class="words rv" style="--d:4"><span>划重点</span><span>补天</span><span>复盘</span></div>
+      <div class="foot rv" style="--d:5"><span class="tag">CHAPTER FIVE / 05</span><span class="pg"><b>11</b> / 15</span></div>
+    </section>
+
+    <!-- 12 · 复习 -->
+    <section class="slide" data-chapter="05" data-name="05 考前复习">
+      <div class="kicker rv" style="--d:0">05 / EXAM WEEK · 生存指南</div>
+      <div class="slide-title rv" style="--d:1">复习：把<span class="em">一学期</span>塞进一周</div>
+      <div class="two wide-left" style="margin-top:20px">
+        <div class="stack">
+          <div class="steps">
+            <div class="step-row rv" style="--d:2"><div class="sn">01</div><div><h4>先盘点，别凭感觉</h4><p>列出要考的科目和剩余天数，知道自己有几份钱可以花。</p></div></div>
+            <div class="step-row rv" style="--d:3"><div class="sn">02</div><div><h4>抓主要矛盾</h4><p>分值高的、还不会的，先啃这两类。别在已经会的地方找安全感。</p></div></div>
+            <div class="step-row rv" style="--d:4"><div class="sn">03</div><div><h4>主动回忆</h4><p>合上书能讲出来才算会。只看不测，本质是自我感动。</p></div></div>
+            <div class="step-row rv" style="--d:5"><div class="sn">04</div><div><h4>留一点给睡眠</h4><p>通宵的账，考场上要还。清醒的脑子比多看两页值钱。</p></div></div>
+          </div>
+        </div>
+        <div class="stack">
+          <div class="win rv" style="--d:3">
+            <div class="win-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="name">countdown.sh</span><span class="right">exam week</span></div>
+<pre><span class="t-prompt">$</span> <span class="t-cmd">countdown</span> <span class="t-arg">--exam</span>
+<span class="t-out">高数    D-3   chapter 5-8</span>
+<span class="t-out">英语    D-5   单词 + 作文模板</span>
+<span class="t-out">专业课  D-7   整本过一遍</span>
+<span class="t-prompt">$</span> <span class="t-cmd">grep</span> <span class="t-arg">"不会" notes.md | wc -l</span>
+<span class="t-ok">42</span></pre>
+          </div>
+          <div class="pt rv" style="--d:5"><h4><span class="n" style="color:var(--amber);border-color:var(--amber)">坑</span>整理笔记整理上瘾</h4><p>本子很漂亮，但一道题都没做。</p></div>
+          <div class="quote rv" style="--d:6;font-size:17px">复习不是重新学一遍，<br>是把散的东西收成一张网。</div>
+        </div>
+      </div>
+      <div class="foot rv" style="--d:7"><span class="tag">05 / 考前复习</span><span class="pg">我的大学生活 · <b>12</b> / 15</span></div>
+    </section>
+
+    <!-- 13 · CH6 divider -->
+    <section class="slide divider" data-chapter="06" data-name="06 总结与感谢">
+      <div class="big-num rv" style="--d:0">06</div>
+      <div class="kicker rv" style="--d:0">CHAPTER SIX</div>
+      <h2 class="rv" style="--d:1">总结与感谢</h2>
+      <div class="dsub rv" style="--d:2">这一年，值得记下的和值得谢谢的</div>
+      <div class="dquote rv" style="--d:3">回头看，<b>真正留下来的不是分数，是习惯。</b></div>
+      <div class="words rv" style="--d:4"><span>变化</span><span>习惯</span><span>谢谢</span></div>
+      <div class="foot rv" style="--d:5"><span class="tag">CHAPTER SIX / 06</span><span class="pg"><b>13</b> / 15</span></div>
+    </section>
+
+    <!-- 14 · 总结 -->
+    <section class="slide" data-chapter="06" data-name="06 总结与感谢">
+      <div class="kicker rv" style="--d:0">06 / TAKEAWAYS · 我真正带走的</div>
+      <div class="slide-title rv" style="--d:1">总结：这一年<span class="em">我变了什么</span></div>
+      <div class="sub rv" style="--d:2;margin-top:6px;font-size:17px">不是某一门课的成绩，是一些没人打分的东西。它们大概会一直带到后面。</div>
+      <div class="grid rv" style="--d:3;grid-template-columns:repeat(3,1fr);margin-top:24px;flex:1;align-content:start">
+        <div class="pt" style="padding:22px"><h4><span class="n">01</span>学会自己安排</h4><p>没人催你起床，也没人告诉你今晚该干嘛。自己排优先级，是大学第一课。</p></div>
+        <div class="pt" style="padding:22px"><h4><span class="n">02</span>学会和不确定相处</h4><p>选课、考试、未来，都没有标准答案。先做，再调整。</p></div>
+        <div class="pt" style="padding:22px"><h4><span class="n">03</span>学会照顾自己</h4><p>早八可以困，但别把自己熬垮。作息和心情，是长期的本钱。</p></div>
+      </div>
+      <div class="quote rv" style="--d:5;font-size:22px;border-color:var(--amber)">如果只留一句话给刚入学的自己：<br><b style="color:var(--amber);font-size:26px">别慌，慢慢来，但别停。</b></div>
+      <div class="foot rv" style="--d:6"><span class="tag">06 / 总结与感谢</span><span class="pg">我的大学生活 · <b>14</b> / 15</span></div>
+    </section>
+
+    <!-- 15 · END -->
+    <section class="slide divider" data-chapter="end" data-name="结尾">
+      <div class="kicker rv" style="--d:0">THE END · THANK YOU</div>
+      <h1 class="rv" style="--d:1;font-size:64px;font-weight:800;line-height:1.35;margin:24px 0 18px">这一年，<br><span style="color:var(--green)">谢谢你们。</span></h1>
+      <div class="dsub rv" style="--d:2">谢谢老师的指引，谢谢同学的陪伴，也谢谢那个没放弃的自己。</div>
+      <div class="words rv" style="--d:3"><span>大一</span><span>大二</span><span>早八</span><span>课表</span><span>期末</span><span>下一站</span></div>
+      <div class="foot rv" style="--d:4"><span class="tag">我的大学生活</span><span class="pg"><b>15</b> / 15 · 2026</span></div>
+    </section>
+
+  </div>
+</div>
+
+<!-- ===== toolbar ===== -->
+<div class="toolbar">
+  <button class="tbtn" id="outlineBtn" title="目录 (O)"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button>
+  <button class="tbtn" id="prevBtn" title="上一页 (←)"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <button class="tbtn" id="nextBtn" title="下一页 (→)"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
+  <div class="prog">
+    <span class="count"><b id="curNum">01</b> / 15</span>
+    <div class="bar"><div class="fill" id="fill"></div></div>
+    <span class="chap-name" id="chapName">封面</span>
+  </div>
+  <span class="hint"><kbd>←</kbd> <kbd>→</kbd> 翻页 · <kbd>O</kbd> 目录 · <kbd>F</kbd> 全屏</span>
+  <button class="tbtn" id="fullBtn" title="全屏 (F)"><svg viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg></button>
+</div>
+
+<!-- ===== outline panel ===== -->
+<div class="panel" id="panel">
+  <div class="sheet">
+    <h2>目录</h2>
+    <div class="psub">我的大学生活 / JUMP TO SLIDE</div>
+    <div class="pgroup" data-c="-"><div class="gt">开场</div>
+      <div class="pitem" data-goto="0"><span class="pi">01</span>封面</div>
+      <div class="pitem" data-goto="1"><span class="pi">02</span>目录 · 六段日常</div>
+    </div>
+    <div class="pgroup" data-c="01"><div class="gt">01 · 大一到大二</div>
+      <div class="pitem" data-goto="2"><span class="pi">03</span>大一到大二 / 章节页</div>
+      <div class="pitem" data-goto="3"><span class="pi">04</span>四个阶段，一条时间线</div>
+    </div>
+    <div class="pgroup" data-c="02"><div class="gt">02 · 早八</div>
+      <div class="pitem" data-goto="4"><span class="pi">05</span>早八 / 章节页</div>
+      <div class="pitem" data-goto="5"><span class="pi">06</span>和闹钟的每日谈判</div>
+    </div>
+    <div class="pgroup" data-c="03"><div class="gt">03 · 课程</div>
+      <div class="pitem" data-goto="6"><span class="pi">07</span>课程 / 章节页</div>
+      <div class="pitem" data-goto="7"><span class="pi">08</span>课表不止是格子</div>
+    </div>
+    <div class="pgroup" data-c="04"><div class="gt">04 · 闲暇时间</div>
+      <div class="pitem" data-goto="8"><span class="pi">09</span>闲暇时间 / 章节页</div>
+      <div class="pitem" data-goto="9"><span class="pi">10</span>把时间花在自己身上</div>
+    </div>
+    <div class="pgroup" data-c="05"><div class="gt">05 · 考前复习</div>
+      <div class="pitem" data-goto="10"><span class="pi">11</span>考前复习 / 章节页</div>
+      <div class="pitem" data-goto="11"><span class="pi">12</span>一周生存指南</div>
+    </div>
+    <div class="pgroup" data-c="06"><div class="gt">06 · 总结与感谢</div>
+      <div class="pitem" data-goto="12"><span class="pi">13</span>总结与感谢 / 章节页</div>
+      <div class="pitem" data-goto="13"><span class="pi">14</span>我真正带走的</div>
+    </div>
+    <div class="pgroup" data-c="-"><div class="gt">收尾</div>
+      <div class="pitem" data-goto="14"><span class="pi">15</span>THANK YOU</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const stage=document.getElementById('stage');
+  const viewport=document.getElementById('viewport');
+  const slides=[...document.querySelectorAll('.slide')];
+  const fill=document.getElementById('fill');
+  const curNum=document.getElementById('curNum');
+  const chapName=document.getElementById('chapName');
+  const panel=document.getElementById('panel');
+  const prevBtn=document.getElementById('prevBtn');
+  const nextBtn=document.getElementById('nextBtn');
+  let cur=0, animating=false;
+
+  function fit(){
+    const w=viewport.clientWidth, h=viewport.clientHeight;
+    const s=Math.min(w/1280,h/720);
+    stage.style.transform='translate(-50%,-50%) scale('+s+')';
+  }
+  window.addEventListener('resize',fit);fit();
+
+  function go(i){
+    i=Math.max(0,Math.min(slides.length-1,i));
+    if(i===cur && slides[i].classList.contains('active')) return;
+    slides.forEach(s=>s.classList.remove('active'));
+    // force animation replay
+    void slides[i].offsetWidth;
+    slides[i].classList.add('active');
+    cur=i;
+    fill.style.width=((i+1)/slides.length*100)+'%';
+    curNum.textContent=String(i+1).padStart(2,'0');
+    chapName.textContent=slides[i].dataset.name||'';
+    prevBtn.disabled=(i===0);
+    nextBtn.disabled=(i===slides.length-1);
+    document.querySelectorAll('.pitem').forEach((p,k)=>p.classList.toggle('cur',k===i));
+  }
+  const next=()=>go(cur+1), prev=()=>go(cur-1);
+
+  prevBtn.onclick=prev;nextBtn.onclick=next;
+
+  document.getElementById('outlineBtn').onclick=()=>panel.classList.add('open');
+  panel.addEventListener('click',e=>{if(e.target===panel)panel.classList.remove('open')});
+  document.querySelectorAll('[data-goto]').forEach(el=>el.addEventListener('click',e=>{
+    e.preventDefault();go(+el.dataset.goto);panel.classList.remove('open');
+  }));
+
+  document.getElementById('fullBtn').onclick=toggleFull;
+  function toggleFull(){
+    if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();
+    else document.exitFullscreen?.();
+  }
+
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '||e.key==='Enter'){e.preventDefault();next();}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();prev();}
+    else if(e.key==='Home'){go(0)}
+    else if(e.key==='End'){go(slides.length-1)}
+    else if(e.key==='o'||e.key==='O'){panel.classList.toggle('open')}
+    else if(e.key==='f'||e.key==='F'){toggleFull()}
+    else if(e.key==='Escape'){panel.classList.remove('open')}
+  });
+
+  let tx=0,ty=0;
+  viewport.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY},{passive:true});
+  viewport.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+    if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)){dx<0?next():prev();}
+  },{passive:true});
+
+  go(0);
+})();
+</script>
+</body>
+</html>
